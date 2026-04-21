@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hoz Auto Electrical · Repair Invoice & Receipt</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            width: 100%;
+            max-width: 1000px;
+            background: #111111;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(185,28,28,0.3);
+            padding: 1.8rem;
+            border: 1px solid #b91c1c33;
+        }
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+        h1 span:first-child { color: #f5b042; }
+        h1 span:last-child { color: #b91c1c; }
+        .subtitle {
+            text-align: center;
+            color: #b0b0b0;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+        .mode-bar {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            margin: 1rem 0 0.5rem;
+        }
+        .mode-btn {
+            background: #1f1f1f;
+            border: 1px solid #333;
+            padding: 0.5rem 1.8rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ccc;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .mode-btn.active {
+            background: #b91c1c;
+            border-color: #f5b042;
+            color: white;
+        }
+        .doc-badge {
+            text-align: center;
+            font-size: 0.9rem;
+            margin: 8px auto;
+            background: #1e1e1e;
+            padding: 5px 25px;
+            border-radius: 40px;
+            display: inline-block;
+            color: #f5b042;
+            width: auto;
+        }
+        .paid-toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0 20px;
+            padding: 5px 15px;
+            background: #1a1a1a;
+            border-radius: 50px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            background: #333;
+            border-radius: 30px;
+            border: 1px solid #555;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .toggle-switch.active {
+            background: #b91c1c;
+            border-color: #f5b042;
+        }
+        .toggle-slider {
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.2s;
+        }
+        .toggle-switch.active .toggle-slider {
+            left: 26px;
+        }
+        .paid-label {
+            font-weight: 600;
+            color: #f5b042;
+            font-size: 0.9rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem 1.5rem;
+        }
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .field-group label {
+            font-weight: 600;
+            color: #f5b042;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        input, select, textarea {
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            width: 100%;
+            color: white;
+            transition: 0.2s;
+        }
+        textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #f5b042;
+            box-shadow: 0 0 0 2px rgba(245,176,66,0.2);
+        }
+        input::placeholder, textarea::placeholder {
+            color: #5a5a5a;
+        }
+        .section-title {
+            grid-column: span 2;
+            font-weight: 700;
+            color: #b91c1c;
+            margin-top: 8px;
+            border-bottom: 2px solid #b91c1c55;
+            padding-bottom: 5px;
+            font-size: 1rem;
+        }
+        .repair-task-row {
+            grid-column: span 2;
+            background: #0c0c0c;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid #2a2a2a;
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .task-header label {
+            font-weight: 700;
+            color: #f5b042;
+            font-size: 0.85rem;
+        }
+        .add-task-btn {
+            background: #b91c1c;
+            border: none;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .task-item {
+            background: #151515;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border-radius: 14px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .task-desc {
+            flex: 3;
+            min-width: 150px;
+        }
+        .task-desc input {
+            background: #252525;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
+        .task-price {
+            width: 110px;
+        }
+        .task-price input {
+            background: #252525;
+            padding: 6px 10px;
+        }
+        .remove-task {
+            background: #3a1a1a;
+            border: none;
+            color: #ff8888;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+        .generate-btn {
+            grid-column: span 2;
+            background: #b91c1c;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 60px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .generate-btn:hover {
+            background: #8b1515;
+            transform: scale(1.01);
+        }
+        .note {
+            grid-column: span 2;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            margin-top: 10px;
+        }
+        @media (max-width: 760px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .section-title, .repair-task-row, .generate-btn, .note {
+                grid-column: span 1;
+            }
+        }
+        hr {
+            border-color: #b91c1c33;
+            margin: 8px 0;
+        }
+        .gold-text {
+            color: #f5b042;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1><span>HOZ</span> <span>AUTO</span></h1>
+    <div class="subtitle">ELECTRICAL & DIAGNOSTICS · REPAIR INVOICE</div>
+
+    <div class="mode-bar">
+        <button class="mode-btn" id="invoiceModeBtn" onclick="setMode('invoice')">📄 INVOICE</button>
+        <button class="mode-btn" id="quotationModeBtn" onclick="setMode('quotation')">📋 QUOTATION</button>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="doc-badge" id="documentType">INVOICE</span>
+    </div>
+
+    <div id="paidToggleArea" class="paid-toggle-container" style="display: flex;">
+        <span class="paid-label">✓ MARK AS PAID</span>
+        <div id="toggleSwitch" class="toggle-switch" onclick="togglePaid()">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+
+    <div class="form-grid">
+        <div class="field-group">
+            <label>👤 CLIENT NAME</label>
+            <input type="text" id="clientName" placeholder="e.g. Thabo Mbeki">
+        </div>
+        <div class="field-group">
+            <label>🚗 VEHICLE REGISTRATION</label>
+            <input type="text" id="vehicleReg" placeholder="e.g. GP 01 XY">
+        </div>
+        <div class="field-group">
+            <label>🏭 CAR MAKE & MODEL</label>
+            <input type="text" id="carModel" placeholder="e.g. BMW 330i, Toyota Hilux">
+        </div>
+        <div class="field-group">
+            <label>📞 CONTACT NUMBER</label>
+            <input type="text" id="contactNum" placeholder="078 123 4567">
+        </div>
+
+        <!-- DYNAMIC TASKS SECTION (repairs done) -->
+        <div class="repair-task-row">
+            <div class="task-header">
+                <label>🔧 TASKS PERFORMED / REPAIRS DONE</label>
+                <button type="button" class="add-task-btn" onclick="addTask()">+ ADD TASK</button>
+            </div>
+            <div id="tasksContainer">
+                <div class="task-item" data-id="0">
+                    <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description (e.g. ECU reprogramming)" value="Full electrical system scan"></div>
+                    <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="850"></div>
+                    <button class="remove-task" onclick="removeTask(this)">✖</button>
+                </div>
+                <div class="task-item" data-id="1">
+                    <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description" value="Alternator replacement"></div>
+                    <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="2450"></div>
+                    <button class="remove-task" onclick="removeTask(this)">✖</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CUSTOM LABOUR / EXTRA CHARGES -->
+        <div class="section-title">💰 EXTRA CHARGES & ADJUSTMENTS</div>
+        <div class="field-group"><label>➕ EXTRA LABOUR / PARTS (R)</label><input type="number" id="extraCharges" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field-group"><label>🎁 DISCOUNT (R)</label><input type="number" id="discountAmount" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field-group"><label>🏦 AMOUNT RECEIVED (deposit/partial)</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
+
+        <div class="section-title">🏦 BANK DETAILS (same as before)</div>
+        <div class="field-group" style="grid-column: span 2; background:#0a0a0a; border-radius: 20px; padding: 8px;">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <span style="color:#aaa;">🏦 Capitec Bank</span>
+                <span style="color:#aaa;">👤 Mr AN Ramalepe</span>
+                <span style="color:#aaa;">🔢 Acc: 1679556728</span>
+                <span style="color:#aaa;">📞 073 725 2514</span>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generatePDF()">📄 GENERATE INVOICE / RECEIPT</button>
+        <div class="note">⚡ HOZ AUTO ELECTRICAL · Precision Diagnostics & Repair · Powered by expertise.</div>
+    </div>
+</div>
+
+<script>
+    let mode = "invoice";
+    let paidEnabled = false;
+    let taskCounter = 2;  // next ID for tasks
+
+    const docTypeSpan = document.getElementById("documentType");
+    const invoiceBtn = document.getElementById("invoiceModeBtn");
+    const quotationBtn = document.getElementById("quotationModeBtn");
+    const paidToggleArea = document.getElementById("paidToggleArea");
+    const toggleSwitch = document.getElementById("toggleSwitch");
+
+    function setMode(selectedMode) {
+        mode = selectedMode;
+        if (mode === "invoice") {
+            invoiceBtn.classList.add("active");
+            quotationBtn.classList.remove("active");
+            docTypeSpan.innerText = "INVOICE";
+            paidToggleArea.style.display = "flex";
+        } else {
+            quotationBtn.classList.add("active");
+            invoiceBtn.classList.remove("active");
+            docTypeSpan.innerText = "QUOTATION";
+            paidToggleArea.style.display = "none";
+            paidEnabled = false;
+            toggleSwitch.classList.remove("active");
+        }
+    }
+
+    function togglePaid() {
+        if (mode !== "invoice") return;
+        paidEnabled = !paidEnabled;
+        if (paidEnabled) toggleSwitch.classList.add("active");
+        else toggleSwitch.classList.remove("active");
+    }
+
+    function addTask() {
+        const container = document.getElementById("tasksContainer");
+        const taskDiv = document.createElement("div");
+        taskDiv.className = "task-item";
+        taskDiv.setAttribute("data-id", taskCounter);
+        taskDiv.innerHTML = `
+            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description" value=""></div>
+            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="0"></div>
+            <button class="remove-task" onclick="removeTask(this)">✖</button>
+        `;
+        container.appendChild(taskDiv);
+        taskCounter++;
+    }
+
+    function removeTask(btn) {
+        const taskItem = btn.closest(".task-item");
+        if (document.querySelectorAll(".task-item").length > 1) {
+            taskItem.remove();
+        } else {
+            alert("At least one repair task is required.");
+        }
+    }
+
+    function getTasks() {
+        const tasks = [];
+        document.querySelectorAll(".task-item").forEach(item => {
+            const desc = item.querySelector(".task-desc-input")?.value || "";
+            const price = parseFloat(item.querySelector(".task-price-input")?.value) || 0;
+            if (desc.trim() !== "" || price > 0) {
+                tasks.push({ description: desc, amount: price });
+            }
+        });
+        return tasks;
+    }
+
+    function getNextDocumentNumber() {
+        let storageKey = mode === "invoice" ? "HOZ_invoiceCounter" : "HOZ_quotationCounter";
+        let lastNumber = parseInt(localStorage.getItem(storageKey));
+        if (isNaN(lastNumber) || lastNumber < 100) {
+            lastNumber = 100;
+        } else {
+            lastNumber += 1;
+        }
+        localStorage.setItem(storageKey, lastNumber);
+        return String(lastNumber);
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+        
+        let y = 18;
+        const client = document.getElementById("clientName").value || "Walk-in Client";
+        const vehicleReg = document.getElementById("vehicleReg").value || "N/A";
+        const carMakeModel = document.getElementById("carModel").value || "Not specified";
+        const contact = document.getElementById("contactNum").value || "-";
+        
+        const docNumber = getNextDocumentNumber();
+        const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
+        const today = new Date().toLocaleDateString("en-ZA");
+        
+        // Header
+        doc.setFontSize(18);
+        doc.setFont(undefined, "bold");
+        doc.setTextColor(245, 176, 66);
+        doc.text("HOZ AUTO ELECTRICAL", 15, y);
+        doc.setFontSize(8);
+        doc.setTextColor(200, 200, 200);
+        doc.text("Specialists in vehicle electrical repairs & diagnostics", 15, y+5);
+        doc.setTextColor(185, 28, 28);
+        doc.text("__________________________________________", 15, y+9);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(245, 176, 66);
+        doc.text(mode === "invoice" ? "INVOICE" : "QUOTATION", 155, 20);
+        doc.setFontSize(8);
+        doc.setTextColor(180, 180, 180);
+        doc.text(invoiceRef, 155, 26);
+        doc.text(`Date: ${today}`, 155, 32);
+        
+        y = 42;
+        doc.setFontSize(8);
+        doc.setTextColor(245, 176, 66);
+        doc.text("BILL TO:", 15, y);
+        doc.setTextColor(220, 220, 220);
+        doc.text(client, 15, y+5);
+        doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
+        doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
+        
+        y = 65;
+        // Table headers
+        doc.setFillColor(30, 30, 30);
+        doc.rect(14, y-3, 182, 7, 'F');
+        doc.setTextColor(245, 176, 66);
+        doc.setFont(undefined, "bold");
+        doc.text("DESCRIPTION", 16, y+1);
+        doc.text("AMOUNT (R)", 160, y+1);
+        y += 8;
+        
+        let subtotal = 0;
+        const tasks = getTasks();
+        doc.setFont(undefined, "normal");
+        doc.setTextColor(220, 220, 220);
+        
+        tasks.forEach(task => {
+            if (task.description.trim() !== "" || task.amount > 0) {
+                let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
+                doc.text(descText, 16, y);
+                doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
+                subtotal += task.amount;
+                y += 5.5;
+                if (y > 265) { doc.addPage(); y = 20; }
+            }
+        });
+        
+        // Extra charges, discount, tip
+        const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
+        const discount = parseFloat(document.getElementById("discountAmount")?.value) || 0;
+        const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
+        
+        if (extra > 0) {
+            doc.text("Extra charges (parts/labour)", 16, y);
+            doc.text(`R ${extra.toFixed(2)}`, 160, y);
+            subtotal += extra;
+            y += 5;
+        }
+        if (discount > 0) {
+            doc.text("Discount applied", 16, y);
+            doc.text(`- R ${discount.toFixed(2)}`, 160, y);
+            subtotal -= discount;
+            y += 5;
+        }
+        if (tip > 0) {
+            doc.text("Tip / Gratuity", 16, y);
+            doc.text(`R ${tip.toFixed(2)}`, 160, y);
+            subtotal += tip;
+            y += 5;
+        }
+        
+        const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
+        let grandTotal = subtotal;
+        let balanceDue = grandTotal - amountPaid;
+        if (balanceDue < 0) balanceDue = 0;
+        
+        y += 2;
+        doc.setDrawColor(185, 28, 28);
+        doc.line(14, y-2, 196, y-2);
+        doc.setFont(undefined, "bold");
+        doc.setTextColor(245, 176, 66);
+        doc.text(`TOTAL: R ${grandTotal.toFixed(2)}`, 140, y+2);
+        y += 7;
+        
+        if (mode === "invoice") {
+            doc.text(`Amount Paid: R ${amountPaid.toFixed(2)}`, 140, y);
+            y += 5;
+            doc.text(`Balance Due: R ${balanceDue.toFixed(2)}`, 140, y);
+            y += 7;
+            if (paidEnabled || (amountPaid >= grandTotal && grandTotal > 0)) {
+                doc.setTextColor(40, 200, 80);
+                doc.text("✓ PAID IN FULL", 140, y);
+                doc.setTextColor(220,220,220);
+            } else if (amountPaid > 0 && amountPaid < grandTotal) {
+                doc.setTextColor(245,176,66);
+                doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
+            }
+        } else {
+            // Quotation mode: show estimate note
+            doc.setFontSize(7);
+            doc.setTextColor(200,200,200);
+            doc.text("* Quotation valid for 14 days. Final invoice may vary.", 140, y);
+        }
+        
+        // Bank details (always same)
+        let bankY = y + 12;
+        if (bankY > 260) { doc.addPage(); bankY = 25; }
+        doc.setFontSize(7);
+        doc.setTextColor(245,176,66);
+        doc.text("BANKING DETAILS", 15, bankY);
+        doc.setTextColor(180,180,180);
+        doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
+        doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
+        
+        // Footer
+        let footerY = doc.internal.pageSize.height - 12;
+        doc.setFontSize(6);
+        doc.setTextColor(120,120,120);
+        doc.text("HOZ Auto Electrical & Diagnostics · Accurate fault finding · Wiring solutions · Keep your car running smoothly", 15, footerY);
+        doc.text("Powered by expertise. Driven by trust.", 15, footerY+4);
+        
+        // Save PDF
+        const pdfBlob = doc.output("blob", { compress: true });
+        const fileName = `${invoiceRef}.pdf`;
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const a = document.createElement("a");
+        a.href = pdfUrl;
+        a.download = fileName;
+        a.click();
+        
+        // Sharing option
+        const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ title: mode === "invoice" ? "Repair Invoice" : "Quotation", files: [file] }).catch(() => {});
+        }
+        
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
+    }
+    
+    setMode("invoice");
+</script>
+</body>
+</html>
