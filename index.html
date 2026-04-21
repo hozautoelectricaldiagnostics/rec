@@ -235,6 +235,37 @@
             border-radius: 20px;
             font-size: 0.7rem;
         }
+        .default-task-toggle {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border: 1px solid #2a2a2a;
+        }
+        .default-task-toggle label {
+            color: #f5b042;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .default-task-toggle input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #b91c1c;
+        }
+        .default-task-price {
+            color: #b0b0b0;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
         .generate-btn {
             grid-column: span 2;
             background: #b91c1c;
@@ -273,6 +304,15 @@
         }
         .gold-text {
             color: #f5b042;
+        }
+        .image-upload-note {
+            grid-column: span 2;
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 8px 12px;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
         }
     </style>
 </head>
@@ -315,23 +355,23 @@
             <input type="text" id="contactNum" placeholder="078 123 4567">
         </div>
 
-        <!-- DYNAMIC TASKS SECTION (repairs done) -->
+        <!-- DEFAULT DIAGNOSTIC TASK WITH CHECKBOX -->
+        <div class="default-task-toggle">
+            <label>
+                <input type="checkbox" id="defaultDiagnosticToggle">
+                🔍 Diagnostic & Fault Code Clearing
+            </label>
+            <span class="default-task-price">R 300.00</span>
+        </div>
+
+        <!-- DYNAMIC TASKS SECTION (repairs done) - EMPTY BY DEFAULT -->
         <div class="repair-task-row">
             <div class="task-header">
-                <label>🔧 TASKS PERFORMED / REPAIRS DONE</label>
+                <label>🔧 ADDITIONAL TASKS / REPAIRS</label>
                 <button type="button" class="add-task-btn" onclick="addTask()">+ ADD TASK</button>
             </div>
             <div id="tasksContainer">
-                <div class="task-item" data-id="0">
-                    <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description (e.g. ECU reprogramming)" value="Full electrical system scan"></div>
-                    <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="850"></div>
-                    <button class="remove-task" onclick="removeTask(this)">✖</button>
-                </div>
-                <div class="task-item" data-id="1">
-                    <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description" value="Alternator replacement"></div>
-                    <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="2450"></div>
-                    <button class="remove-task" onclick="removeTask(this)">✖</button>
-                </div>
+                <!-- No default tasks - completely empty -->
             </div>
         </div>
 
@@ -342,7 +382,7 @@
         <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
         <div class="field-group"><label>🏦 AMOUNT RECEIVED (deposit/partial)</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
 
-        <div class="section-title">🏦 BANK DETAILS (same as before)</div>
+        <div class="section-title">🏦 BANK DETAILS</div>
         <div class="field-group" style="grid-column: span 2; background:#0a0a0a; border-radius: 20px; padding: 8px;">
             <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                 <span style="color:#aaa;">🏦 Capitec Bank</span>
@@ -350,6 +390,14 @@
                 <span style="color:#aaa;">🔢 Acc: 1679556728</span>
                 <span style="color:#aaa;">📞 073 725 2514</span>
             </div>
+        </div>
+
+        <!-- Image Upload Instructions - PNG format -->
+        <div class="image-upload-note">
+            📸 To add images: Place these PNG files in an "assets" folder:<br>
+            • logo.png (your business logo)<br>
+            • signature.png (authorised signature)<br>
+            • paid.png (PAID stamp)
         </div>
 
         <button class="generate-btn" onclick="generatePDF()">📄 GENERATE INVOICE / RECEIPT</button>
@@ -360,7 +408,7 @@
 <script>
     let mode = "invoice";
     let paidEnabled = false;
-    let taskCounter = 2;  // next ID for tasks
+    let taskCounter = 0;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
@@ -408,15 +456,17 @@
 
     function removeTask(btn) {
         const taskItem = btn.closest(".task-item");
-        if (document.querySelectorAll(".task-item").length > 1) {
-            taskItem.remove();
-        } else {
-            alert("At least one repair task is required.");
-        }
+        taskItem.remove();
     }
 
     function getTasks() {
         const tasks = [];
+        // Add default diagnostic task if checked
+        const isDiagnosticChecked = document.getElementById("defaultDiagnosticToggle")?.checked || false;
+        if (isDiagnosticChecked) {
+            tasks.push({ description: "Diagnostic & Fault Code Clearing", amount: 300 });
+        }
+        // Get additional tasks
         document.querySelectorAll(".task-item").forEach(item => {
             const desc = item.querySelector(".task-desc-input")?.value || "";
             const price = parseFloat(item.querySelector(".task-price-input")?.value) || 0;
@@ -439,6 +489,14 @@
         return String(lastNumber);
     }
 
+    // Load images (PNG format from assets folder)
+    const logoImg = new Image();
+    const paidImg = new Image();
+    const signatureImg = new Image();
+    logoImg.src = "assets/logo.png";
+    paidImg.src = "assets/paid.png";
+    signatureImg.src = "assets/signature.png";
+
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
@@ -453,26 +511,31 @@
         const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
         const today = new Date().toLocaleDateString("en-ZA");
         
-        // Header
+        // Try to add logo (PNG)
+        try {
+            if (logoImg.complete && logoImg.naturalWidth > 0) {
+                doc.addImage(logoImg, "PNG", 10, 5, 25, 15);
+            }
+        } catch(e) {}
+        
+        // Header text
         doc.setFontSize(18);
         doc.setFont(undefined, "bold");
         doc.setTextColor(245, 176, 66);
-        doc.text("HOZ AUTO ELECTRICAL", 15, y);
+        doc.text("HOZ AUTO ELECTRICAL", 40, 12);
         doc.setFontSize(8);
         doc.setTextColor(200, 200, 200);
-        doc.text("Specialists in vehicle electrical repairs & diagnostics", 15, y+5);
-        doc.setTextColor(185, 28, 28);
-        doc.text("__________________________________________", 15, y+9);
+        doc.text("Specialists in vehicle electrical repairs & diagnostics", 40, 18);
         
         doc.setFontSize(12);
         doc.setTextColor(245, 176, 66);
-        doc.text(mode === "invoice" ? "INVOICE" : "QUOTATION", 155, 20);
+        doc.text(mode === "invoice" ? "INVOICE" : "QUOTATION", 155, 15);
         doc.setFontSize(8);
         doc.setTextColor(180, 180, 180);
-        doc.text(invoiceRef, 155, 26);
-        doc.text(`Date: ${today}`, 155, 32);
+        doc.text(invoiceRef, 155, 22);
+        doc.text(`Date: ${today}`, 155, 28);
         
-        y = 42;
+        y = 38;
         doc.setFontSize(8);
         doc.setTextColor(245, 176, 66);
         doc.text("BILL TO:", 15, y);
@@ -481,7 +544,7 @@
         doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
         doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
         
-        y = 65;
+        y = 62;
         // Table headers
         doc.setFillColor(30, 30, 30);
         doc.rect(14, y-3, 182, 7, 'F');
@@ -503,9 +566,14 @@
                 doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                 subtotal += task.amount;
                 y += 5.5;
-                if (y > 265) { doc.addPage(); y = 20; }
+                if (y > 250) { doc.addPage(); y = 20; }
             }
         });
+        
+        if (tasks.length === 0) {
+            doc.text("-- No tasks added --", 16, y);
+            y += 5.5;
+        }
         
         // Extra charges, discount, tip
         const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
@@ -557,27 +625,54 @@
                 doc.setTextColor(245,176,66);
                 doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
             }
-        } else {
-            // Quotation mode: show estimate note
-            doc.setFontSize(7);
-            doc.setTextColor(200,200,200);
-            doc.text("* Quotation valid for 14 days. Final invoice may vary.", 140, y);
         }
         
-        // Bank details (always same)
+        // BANK DETAILS - ONLY ON INVOICE MODE
         let bankY = y + 12;
-        if (bankY > 260) { doc.addPage(); bankY = 25; }
-        doc.setFontSize(7);
-        doc.setTextColor(245,176,66);
-        doc.text("BANKING DETAILS", 15, bankY);
-        doc.setTextColor(180,180,180);
-        doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
-        doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
+        if (mode === "invoice") {
+            if (bankY > 250) { doc.addPage(); bankY = 25; }
+            doc.setFontSize(7);
+            doc.setTextColor(245,176,66);
+            doc.text("BANKING DETAILS", 15, bankY);
+            doc.setTextColor(180,180,180);
+            doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
+            doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
+        }
+        
+        // SIGNATURE (bottom right) - PNG format - only on INVOICE mode
+        let signatureY = doc.internal.pageSize.height - 18;
+        if (mode === "invoice") {
+            try {
+                if (signatureImg.complete && signatureImg.naturalWidth > 0) {
+                    doc.addImage(signatureImg, "PNG", 155, signatureY-8, 25, 10);
+                }
+            } catch(e) {}
+            doc.setFontSize(6);
+            doc.setTextColor(150,150,150);
+            doc.text("Authorised Signature", 160, signatureY+3);
+        }
+        
+        // PAID STAMP (bottom left) - PNG format - only when marked paid on invoice
+        if (mode === "invoice" && paidEnabled) {
+            try {
+                if (paidImg.complete && paidImg.naturalWidth > 0) {
+                    doc.addImage(paidImg, "PNG", 10, signatureY-10, 22, 12);
+                } else {
+                    doc.setFontSize(14);
+                    doc.setTextColor(40, 200, 80);
+                    doc.text("PAID", 12, signatureY-2);
+                }
+            } catch(e) {
+                doc.setFontSize(14);
+                doc.setTextColor(40, 200, 80);
+                doc.text("PAID", 12, signatureY-2);
+            }
+        }
         
         // Footer
-        let footerY = doc.internal.pageSize.height - 12;
+        let footerY = doc.internal.pageSize.height - 10;
         doc.setFontSize(6);
-        doc.setTextColor(120,120,120);
+        doc.setTextColor(100,100,100);
         doc.text("HOZ Auto Electrical & Diagnostics · Accurate fault finding · Wiring solutions · Keep your car running smoothly", 15, footerY);
         doc.text("Powered by expertise. Driven by trust.", 15, footerY+4);
         
