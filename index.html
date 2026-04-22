@@ -426,7 +426,6 @@
     logoImg.crossOrigin = "Anonymous";
     logoImg.onload = function() {
         logoLoaded = true;
-        // Create canvas to get image data
         const canvas = document.createElement('canvas');
         canvas.width = logoImg.width;
         canvas.height = logoImg.height;
@@ -441,7 +440,7 @@
         imageStatus.innerHTML = '⚠️ logo.png not found in assets folder | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#ff8888';
     };
-    logoImg.src = "assets/logo.png?" + Date.now(); // Add timestamp to prevent cache issues
+    logoImg.src = "assets/logo.png?" + Date.now();
 
     // Load paid.png
     const paidImg = new Image();
@@ -539,7 +538,6 @@
         const loadingDiv = document.getElementById("loadingIndicator");
         loadingDiv.style.display = "block";
         
-        // Small delay to let loading indicator show
         setTimeout(() => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
@@ -554,14 +552,24 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // Header
+            // LOGO AT TOP LEFT CORNER (before business name)
+            if (logoLoaded && logoImgData) {
+                try {
+                    doc.addImage(logoImgData, 'PNG', 15, 5, 25, 12);
+                } catch(e) {
+                    console.log("Logo add error:", e);
+                }
+            }
+            
+            // Header text (shifted right to accommodate logo)
+            let headerX = logoLoaded ? 45 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
             doc.setTextColor(0, 0, 0);
-            doc.text("HOZ AUTO ELECTRICAL", 15, 12);
+            doc.text("HOZ AUTO ELECTRICAL", headerX, 12);
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
-            doc.text("Specialists in vehicle electrical repairs & diagnostics", 15, 18);
+            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerX, 18);
             
             doc.setFontSize(12);
             doc.setTextColor(185, 28, 28);
@@ -602,7 +610,7 @@
                     doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                     subtotal += task.amount;
                     y += 5.5;
-                    if (y > 210) { doc.addPage(); y = 20; }
+                    if (y > 230) { doc.addPage(); y = 20; }
                 }
             });
             
@@ -662,31 +670,15 @@
                 }
             }
             
-            // BANKING DETAILS - BOTTOM LEFT
-            let bankY = doc.internal.pageSize.height - 45;
-            doc.setFontSize(7);
-            doc.setTextColor(185, 28, 28);
-            doc.text("BANKING DETAILS", 15, bankY);
-            doc.setTextColor(0, 0, 0);
-            doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
-            doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
-            
-            // LOGO AT BOTTOM LEFT (using pre-loaded image data)
-            let logoY = doc.internal.pageSize.height - 22;
-            if (logoLoaded && logoImgData) {
-                try {
-                    // Resize logo to fit (max width 35mm, max height 15mm)
-                    doc.addImage(logoImgData, 'PNG', 15, logoY-12, 30, 12);
-                } catch(e) {
-                    console.log("Logo add error:", e);
-                    doc.setFontSize(7);
-                    doc.setTextColor(150, 150, 150);
-                    doc.text("[HOZ AUTO]", 15, logoY-4);
-                }
-            } else {
+            // BANKING DETAILS - ONLY ON QUOTATION MODE (NOT ON INVOICE)
+            if (mode === "quotation") {
+                let bankY = doc.internal.pageSize.height - 35;
                 doc.setFontSize(7);
-                doc.setTextColor(150, 150, 150);
-                doc.text("[HOZ AUTO]", 15, logoY-4);
+                doc.setTextColor(185, 28, 28);
+                doc.text("BANKING DETAILS", 15, bankY);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
+                doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
             }
             
             // PAID STAMP - appears when paidEnabled is true (only on invoice mode)
@@ -694,16 +686,16 @@
                 let paidY = doc.internal.pageSize.height - 22;
                 if (paidLoaded && paidImgData) {
                     try {
-                        doc.addImage(paidImgData, 'PNG', 50, paidY-12, 22, 12);
+                        doc.addImage(paidImgData, 'PNG', 15, paidY-12, 22, 12);
                     } catch(e) {
                         doc.setFontSize(9);
                         doc.setTextColor(40, 160, 60);
-                        doc.text("✓ PAID", 52, paidY-4);
+                        doc.text("✓ PAID", 18, paidY-4);
                     }
                 } else {
                     doc.setFontSize(9);
                     doc.setTextColor(40, 160, 60);
-                    doc.text("✓ PAID", 52, paidY-4);
+                    doc.text("✓ PAID", 18, paidY-4);
                 }
             }
             
