@@ -22,11 +22,11 @@
         .card {
             width: 100%;
             max-width: 1000px;
-            background: #ffffff;
+            background: #111111;
             border-radius: 28px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(185,28,28,0.3);
             padding: 1.8rem;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #b91c1c33;
         }
         h1 {
             font-size: 1.9rem;
@@ -34,13 +34,12 @@
             letter-spacing: -0.5px;
             text-align: center;
             margin-bottom: 0.25rem;
-            color: #000000;
         }
-        h1 span:first-child { color: #b91c1c; }
+        h1 span:first-child { color: #f5b042; }
         h1 span:last-child { color: #b91c1c; }
         .subtitle {
             text-align: center;
-            color: #555555;
+            color: #b0b0b0;
             margin-bottom: 5px;
             font-size: 0.8rem;
             letter-spacing: 1px;
@@ -52,30 +51,30 @@
             margin: 1rem 0 0.5rem;
         }
         .mode-btn {
-            background: #f0f0f0;
-            border: 1px solid #ccc;
+            background: #1f1f1f;
+            border: 1px solid #333;
             padding: 0.5rem 1.8rem;
             border-radius: 40px;
             font-size: 0.9rem;
             font-weight: 600;
-            color: #333;
+            color: #ccc;
             cursor: pointer;
             transition: 0.2s;
         }
         .mode-btn.active {
             background: #b91c1c;
-            border-color: #b91c1c;
+            border-color: #f5b042;
             color: white;
         }
         .doc-badge {
             text-align: center;
             font-size: 0.9rem;
             margin: 8px auto;
-            background: #f5f5f5;
+            background: #1e1e1e;
             padding: 5px 25px;
             border-radius: 40px;
             display: inline-block;
-            color: #b91c1c;
+            color: #f5b042;
             width: auto;
         }
         .paid-toggle-container {
@@ -85,7 +84,7 @@
             gap: 12px;
             margin: 10px 0 20px;
             padding: 5px 15px;
-            background: #f5f5f5;
+            background: #1a1a1a;
             border-radius: 50px;
             width: fit-content;
             margin-left: auto;
@@ -96,15 +95,15 @@
             display: inline-block;
             width: 50px;
             height: 26px;
-            background: #ccc;
+            background: #333;
             border-radius: 30px;
-            border: 1px solid #999;
+            border: 1px solid #555;
             transition: 0.2s;
             cursor: pointer;
         }
         .toggle-switch.active {
             background: #b91c1c;
-            border-color: #b91c1c;
+            border-color: #f5b042;
         }
         .toggle-slider {
             position: absolute;
@@ -121,7 +120,7 @@
         }
         .paid-label {
             font-weight: 600;
-            color: #333;
+            color: #f5b042;
             font-size: 0.9rem;
         }
         .form-grid {
@@ -136,18 +135,18 @@
         }
         .field-group label {
             font-weight: 600;
-            color: #b91c1c;
+            color: #f5b042;
             font-size: 0.75rem;
             letter-spacing: 0.5px;
         }
         input, select, textarea {
             padding: 8px 12px;
-            background: #fafafa;
-            border: 1px solid #ddd;
+            background: #1e1e1e;
+            border: 1px solid #333;
             border-radius: 16px;
             font-size: 0.85rem;
             width: 100%;
-            color: #000000;
+            color: white;
             transition: 0.2s;
         }
         textarea {
@@ -156,11 +155,11 @@
         }
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #b91c1c;
-            box-shadow: 0 0 0 2px rgba(185,28,28,0.1);
+            border-color: #f5b042;
+            box-shadow: 0 0 0 2px rgba(245,176,66,0.2);
         }
         input::placeholder, textarea::placeholder {
-            color: #aaa;
+            color: #5a5a5a;
         }
         .section-title {
             grid-column: span 2;
@@ -173,10 +172,10 @@
         }
         .repair-task-row {
             grid-column: span 2;
-            background: #fafafa;
+            background: #0c0c0c;
             padding: 12px;
             border-radius: 20px;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #2a2a2a;
         }
         .task-header {
             display: flex;
@@ -188,7 +187,7 @@
         }
         .task-header label {
             font-weight: 700;
-            color: #b91c1c;
+            color: #f5b042;
             font-size: 0.85rem;
         }
         .add-task-btn {
@@ -202,7 +201,7 @@
             font-weight: bold;
         }
         .task-item {
-            background: #ffffff;
+            background: #151515;
             margin-bottom: 8px;
             padding: 8px 10px;
             border-radius: 14px;
@@ -210,14 +209,13 @@
             gap: 8px;
             align-items: center;
             flex-wrap: wrap;
-            border: 1px solid #eee;
         }
         .task-desc {
             flex: 3;
             min-width: 150px;
         }
         .task-desc input {
-            background: #fafafa;
+            background: #252525;
             padding: 6px 10px;
             font-size: 0.8rem;
         }
@@ -225,20 +223,20 @@
             width: 110px;
         }
         .task-price input {
-            background: #fafafa;
+            background: #252525;
             padding: 6px 10px;
         }
         .remove-task {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            color: #b91c1c;
+            background: #3a1a1a;
+            border: none;
+            color: #ff8888;
             cursor: pointer;
             padding: 5px 10px;
             border-radius: 20px;
             font-size: 0.7rem;
         }
         .default-task-toggle {
-            background: #fafafa;
+            background: #1a1a1a;
             border-radius: 16px;
             padding: 10px 12px;
             margin-bottom: 12px;
@@ -246,10 +244,10 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #2a2a2a;
         }
         .default-task-toggle label {
-            color: #333;
+            color: #f5b042;
             font-weight: 600;
             font-size: 0.85rem;
             display: flex;
@@ -264,7 +262,7 @@
             accent-color: #b91c1c;
         }
         .default-task-price {
-            color: #555;
+            color: #b0b0b0;
             font-size: 0.8rem;
             margin-left: auto;
         }
@@ -288,7 +286,7 @@
         .note {
             grid-column: span 2;
             font-size: 0.7rem;
-            color: #777;
+            color: #888;
             text-align: center;
             margin-top: 10px;
         }
@@ -301,20 +299,8 @@
             }
         }
         hr {
-            border-color: #e0e0e0;
+            border-color: #b91c1c33;
             margin: 8px 0;
-        }
-        .gold-text {
-            color: #b91c1c;
-        }
-        .image-upload-note {
-            grid-column: span 2;
-            background: #f5f5f5;
-            border-radius: 16px;
-            padding: 8px 12px;
-            font-size: 0.7rem;
-            color: #666;
-            text-align: center;
         }
     </style>
 </head>
@@ -342,7 +328,7 @@
     <div class="form-grid">
         <div class="field-group">
             <label>👤 CLIENT NAME</label>
-            <input type="text" id="clientName" placeholder="e.g. Thabo Mbeki">
+            <input type="text" id="clientName" placeholder="Enter client name">
         </div>
         <div class="field-group">
             <label>🚗 VEHICLE REGISTRATION</label>
@@ -366,41 +352,23 @@
             <span class="default-task-price">R 300.00</span>
         </div>
 
-        <!-- DYNAMIC TASKS SECTION (repairs done) - EMPTY BY DEFAULT -->
+        <!-- DYNAMIC TASKS SECTION -->
         <div class="repair-task-row">
             <div class="task-header">
                 <label>🔧 ADDITIONAL TASKS / REPAIRS</label>
                 <button type="button" class="add-task-btn" onclick="addTask()">+ ADD TASK</button>
             </div>
             <div id="tasksContainer">
-                <!-- No default tasks - completely empty -->
+                <!-- Empty by default -->
             </div>
         </div>
 
-        <!-- CUSTOM LABOUR / EXTRA CHARGES -->
+        <!-- EXTRA CHARGES & ADJUSTMENTS -->
         <div class="section-title">💰 EXTRA CHARGES & ADJUSTMENTS</div>
         <div class="field-group"><label>➕ EXTRA LABOUR / PARTS (R)</label><input type="number" id="extraCharges" min="0" step="0.01" placeholder="0.00"></div>
         <div class="field-group"><label>🎁 DISCOUNT (R)</label><input type="number" id="discountAmount" min="0" step="0.01" placeholder="0.00"></div>
         <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="field-group"><label>🏦 AMOUNT RECEIVED (deposit/partial)</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
-
-        <div class="section-title">🏦 BANK DETAILS</div>
-        <div class="field-group" style="grid-column: span 2; background:#f5f5f5; border-radius: 20px; padding: 8px;">
-            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                <span style="color:#333;">🏦 Capitec Bank</span>
-                <span style="color:#333;">👤 Mr AN Ramalepe</span>
-                <span style="color:#333;">🔢 Acc: 1679556728</span>
-                <span style="color:#333;">📞 073 725 2514</span>
-            </div>
-        </div>
-
-        <!-- Image Upload Instructions - PNG format -->
-        <div class="image-upload-note">
-            📸 To add images: Place these PNG files in an "assets" folder:<br>
-            • logo.png (your business logo - appears bottom left on PDF)<br>
-            • signature.png (authorised signature - bottom right)<br>
-            • paid.png (PAID stamp - bottom left when marked paid)
-        </div>
+        <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
 
         <button class="generate-btn" onclick="generatePDF()">📄 GENERATE INVOICE / RECEIPT</button>
         <div class="note">⚡ HOZ AUTO ELECTRICAL · Precision Diagnostics & Repair · Powered by expertise.</div>
@@ -463,12 +431,10 @@
 
     function getTasks() {
         const tasks = [];
-        // Add default diagnostic task if checked
         const isDiagnosticChecked = document.getElementById("defaultDiagnosticToggle")?.checked || false;
         if (isDiagnosticChecked) {
             tasks.push({ description: "Diagnostic & Fault Code Clearing", amount: 300 });
         }
-        // Get additional tasks
         document.querySelectorAll(".task-item").forEach(item => {
             const desc = item.querySelector(".task-desc-input")?.value || "";
             const price = parseFloat(item.querySelector(".task-price-input")?.value) || 0;
@@ -491,14 +457,6 @@
         return String(lastNumber);
     }
 
-    // Load images (PNG format from assets folder)
-    const logoImg = new Image();
-    const paidImg = new Image();
-    const signatureImg = new Image();
-    logoImg.src = "assets/logo.png";
-    paidImg.src = "assets/paid.png";
-    signatureImg.src = "assets/signature.png";
-
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
@@ -513,7 +471,7 @@
         const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
         const today = new Date().toLocaleDateString("en-ZA");
         
-        // Header text (black color)
+        // Header
         doc.setFontSize(18);
         doc.setFont(undefined, "bold");
         doc.setTextColor(0, 0, 0);
@@ -615,84 +573,26 @@
             if (paidEnabled || (amountPaid >= grandTotal && grandTotal > 0)) {
                 doc.setTextColor(40, 160, 60);
                 doc.text("✓ PAID IN FULL", 140, y);
-                doc.setTextColor(0, 0, 0);
             } else if (amountPaid > 0 && amountPaid < grandTotal) {
                 doc.setTextColor(185, 28, 28);
                 doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
             }
         }
         
-        // BANK DETAILS - ONLY ON INVOICE MODE
-        let bankY = y + 12;
-        if (mode === "invoice") {
-            if (bankY > 250) { doc.addPage(); bankY = 25; }
-            doc.setFontSize(7);
-            doc.setTextColor(185, 28, 28);
-            doc.text("BANKING DETAILS", 15, bankY);
-            doc.setTextColor(0, 0, 0);
-            doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
-            doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
-        }
-        
-        // LOGO AT BOTTOM LEFT
-        let logoY = doc.internal.pageSize.height - 18;
-        try {
-            if (logoImg.complete && logoImg.naturalWidth > 0) {
-                doc.addImage(logoImg, "PNG", 10, logoY-8, 25, 15);
-            }
-        } catch(e) {}
-        
-        // SIGNATURE (bottom right) - PNG format - only on INVOICE mode
-        let signatureY = doc.internal.pageSize.height - 18;
-        if (mode === "invoice") {
-            try {
-                if (signatureImg.complete && signatureImg.naturalWidth > 0) {
-                    doc.addImage(signatureImg, "PNG", 155, signatureY-8, 25, 10);
-                }
-            } catch(e) {}
-            doc.setFontSize(6);
-            doc.setTextColor(100, 100, 100);
-            doc.text("Authorised Signature", 160, signatureY+3);
-        }
-        
-        // PAID STAMP (bottom left next to logo or over it) - only when marked paid on invoice
-        if (mode === "invoice" && paidEnabled) {
-            try {
-                if (paidImg.complete && paidImg.naturalWidth > 0) {
-                    doc.addImage(paidImg, "PNG", 40, logoY-10, 22, 12);
-                } else {
-                    doc.setFontSize(12);
-                    doc.setTextColor(40, 160, 60);
-                    doc.text("PAID", 42, logoY-2);
-                }
-            } catch(e) {
-                doc.setFontSize(12);
-                doc.setTextColor(40, 160, 60);
-                doc.text("PAID", 42, logoY-2);
-            }
-        }
-        
         // Footer
-        let footerY = doc.internal.pageSize.height - 8;
+        let footerY = doc.internal.pageSize.height - 12;
         doc.setFontSize(6);
         doc.setTextColor(120, 120, 120);
-        doc.text("HOZ Auto Electrical & Diagnostics · Accurate fault finding · Wiring solutions · Keep your car running smoothly", 15, footerY);
-        doc.text("Powered by expertise. Driven by trust.", 15, footerY+4);
+        doc.text("HOZ Auto Electrical & Diagnostics · Thank you for your business!", 15, footerY);
         
         // Save PDF
-        const pdfBlob = doc.output("blob", { compress: true });
+        const pdfBlob = doc.output("blob");
         const fileName = `${invoiceRef}.pdf`;
         const pdfUrl = URL.createObjectURL(pdfBlob);
         const a = document.createElement("a");
         a.href = pdfUrl;
         a.download = fileName;
         a.click();
-        
-        // Sharing option
-        const file = new File([pdfBlob], fileName, { type: "application/pdf" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ title: mode === "invoice" ? "Repair Invoice" : "Quotation", files: [file] }).catch(() => {});
-        }
         
         setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
     }
