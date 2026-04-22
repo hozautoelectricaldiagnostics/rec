@@ -519,7 +519,7 @@
                 doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                 subtotal += task.amount;
                 y += 5.5;
-                if (y > 250) { doc.addPage(); y = 20; }
+                if (y > 230) { doc.addPage(); y = 20; }
             }
         });
         
@@ -579,8 +579,17 @@
             }
         }
         
+        // BANKING DETAILS - BOTTOM LEFT FOR BOTH INVOICE AND QUOTATION
+        let bankY = doc.internal.pageSize.height - 28;
+        doc.setFontSize(7);
+        doc.setTextColor(185, 28, 28);
+        doc.text("BANKING DETAILS", 15, bankY);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
+        doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
+        
         // Footer
-        let footerY = doc.internal.pageSize.height - 12;
+        let footerY = doc.internal.pageSize.height - 10;
         doc.setFontSize(6);
         doc.setTextColor(120, 120, 120);
         doc.text("HOZ Auto Electrical & Diagnostics · Thank you for your business!", 15, footerY);
