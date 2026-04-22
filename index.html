@@ -290,11 +290,21 @@
             text-align: center;
             margin-top: 10px;
         }
+        .image-note {
+            grid-column: span 2;
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 8px 12px;
+            font-size: 0.7rem;
+            color: #ff8888;
+            text-align: center;
+            margin-top: 5px;
+        }
         @media (max-width: 760px) {
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            .section-title, .repair-task-row, .generate-btn, .note {
+            .section-title, .repair-task-row, .generate-btn, .note, .image-note {
                 grid-column: span 1;
             }
         }
@@ -302,9 +312,23 @@
             border-color: #b91c1c33;
             margin: 8px 0;
         }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #b91c1c;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            z-index: 9999;
+            display: none;
+        }
     </style>
 </head>
 <body>
+<div class="loading" id="loadingIndicator">Generating PDF with images...</div>
+
 <div class="card">
     <h1><span>HOZ</span> <span>AUTO</span></h1>
     <div class="subtitle">ELECTRICAL & DIAGNOSTICS · REPAIR INVOICE</div>
@@ -370,6 +394,10 @@
         <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
         <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
 
+        <div class="image-note" id="imageStatus">
+            🔄 Checking images in "assets" folder...
+        </div>
+
         <button class="generate-btn" onclick="generatePDF()">📄 GENERATE INVOICE / RECEIPT</button>
         <div class="note">⚡ HOZ AUTO ELECTRICAL · Precision Diagnostics & Repair · Powered by expertise.</div>
     </div>
@@ -379,12 +407,62 @@
     let mode = "invoice";
     let paidEnabled = false;
     let taskCounter = 0;
+    
+    // Pre-load images with proper error handling
+    let logoLoaded = false;
+    let paidLoaded = false;
+    let logoImgData = null;
+    let paidImgData = null;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
     const quotationBtn = document.getElementById("quotationModeBtn");
     const paidToggleArea = document.getElementById("paidToggleArea");
     const toggleSwitch = document.getElementById("toggleSwitch");
+    const imageStatus = document.getElementById("imageStatus");
+
+    // Load logo.png
+    const logoImg = new Image();
+    logoImg.crossOrigin = "Anonymous";
+    logoImg.onload = function() {
+        logoLoaded = true;
+        // Create canvas to get image data
+        const canvas = document.createElement('canvas');
+        canvas.width = logoImg.width;
+        canvas.height = logoImg.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(logoImg, 0, 0);
+        logoImgData = canvas.toDataURL('image/png');
+        imageStatus.innerHTML = '✅ Logo loaded successfully | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        imageStatus.style.color = '#88ff88';
+    };
+    logoImg.onerror = function() {
+        logoLoaded = false;
+        imageStatus.innerHTML = '⚠️ logo.png not found in assets folder | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        imageStatus.style.color = '#ff8888';
+    };
+    logoImg.src = "assets/logo.png?" + Date.now(); // Add timestamp to prevent cache issues
+
+    // Load paid.png
+    const paidImg = new Image();
+    paidImg.crossOrigin = "Anonymous";
+    paidImg.onload = function() {
+        paidLoaded = true;
+        const canvas = document.createElement('canvas');
+        canvas.width = paidImg.width;
+        canvas.height = paidImg.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(paidImg, 0, 0);
+        paidImgData = canvas.toDataURL('image/png');
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
+        imageStatus.style.color = '#88ff88';
+    };
+    paidImg.onerror = function() {
+        paidLoaded = false;
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ⚠️ paid.png not found in assets folder';
+        imageStatus.style.color = '#ff8888';
+    };
+    paidImg.src = "assets/paid.png?" + Date.now();
 
     function setMode(selectedMode) {
         mode = selectedMode;
@@ -458,152 +536,197 @@
     }
 
     function generatePDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+        const loadingDiv = document.getElementById("loadingIndicator");
+        loadingDiv.style.display = "block";
         
-        let y = 18;
-        const client = document.getElementById("clientName").value || "Walk-in Client";
-        const vehicleReg = document.getElementById("vehicleReg").value || "N/A";
-        const carMakeModel = document.getElementById("carModel").value || "Not specified";
-        const contact = document.getElementById("contactNum").value || "-";
-        
-        const docNumber = getNextDocumentNumber();
-        const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
-        const today = new Date().toLocaleDateString("en-ZA");
-        
-        // Header
-        doc.setFontSize(18);
-        doc.setFont(undefined, "bold");
-        doc.setTextColor(0, 0, 0);
-        doc.text("HOZ AUTO ELECTRICAL", 15, 12);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text("Specialists in vehicle electrical repairs & diagnostics", 15, 18);
-        
-        doc.setFontSize(12);
-        doc.setTextColor(185, 28, 28);
-        doc.text(mode === "invoice" ? "INVOICE" : "QUOTATION", 155, 15);
-        doc.setFontSize(8);
-        doc.setTextColor(100, 100, 100);
-        doc.text(invoiceRef, 155, 22);
-        doc.text(`Date: ${today}`, 155, 28);
-        
-        y = 38;
-        doc.setFontSize(8);
-        doc.setTextColor(185, 28, 28);
-        doc.text("BILL TO:", 15, y);
-        doc.setTextColor(0, 0, 0);
-        doc.text(client, 15, y+5);
-        doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
-        doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
-        
-        y = 62;
-        // Table headers
-        doc.setFillColor(240, 240, 240);
-        doc.rect(14, y-3, 182, 7, 'F');
-        doc.setTextColor(185, 28, 28);
-        doc.setFont(undefined, "bold");
-        doc.text("DESCRIPTION", 16, y+1);
-        doc.text("AMOUNT (R)", 160, y+1);
-        y += 8;
-        
-        let subtotal = 0;
-        const tasks = getTasks();
-        doc.setFont(undefined, "normal");
-        doc.setTextColor(0, 0, 0);
-        
-        tasks.forEach(task => {
-            if (task.description.trim() !== "" || task.amount > 0) {
-                let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
-                doc.text(descText, 16, y);
-                doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
-                subtotal += task.amount;
+        // Small delay to let loading indicator show
+        setTimeout(() => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+            
+            let y = 18;
+            const client = document.getElementById("clientName").value || "Walk-in Client";
+            const vehicleReg = document.getElementById("vehicleReg").value || "N/A";
+            const carMakeModel = document.getElementById("carModel").value || "Not specified";
+            const contact = document.getElementById("contactNum").value || "-";
+            
+            const docNumber = getNextDocumentNumber();
+            const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
+            const today = new Date().toLocaleDateString("en-ZA");
+            
+            // Header
+            doc.setFontSize(18);
+            doc.setFont(undefined, "bold");
+            doc.setTextColor(0, 0, 0);
+            doc.text("HOZ AUTO ELECTRICAL", 15, 12);
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Specialists in vehicle electrical repairs & diagnostics", 15, 18);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(185, 28, 28);
+            doc.text(mode === "invoice" ? "INVOICE" : "QUOTATION", 155, 15);
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(invoiceRef, 155, 22);
+            doc.text(`Date: ${today}`, 155, 28);
+            
+            y = 38;
+            doc.setFontSize(8);
+            doc.setTextColor(185, 28, 28);
+            doc.text("BILL TO:", 15, y);
+            doc.setTextColor(0, 0, 0);
+            doc.text(client, 15, y+5);
+            doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
+            doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
+            
+            y = 62;
+            // Table headers
+            doc.setFillColor(240, 240, 240);
+            doc.rect(14, y-3, 182, 7, 'F');
+            doc.setTextColor(185, 28, 28);
+            doc.setFont(undefined, "bold");
+            doc.text("DESCRIPTION", 16, y+1);
+            doc.text("AMOUNT (R)", 160, y+1);
+            y += 8;
+            
+            let subtotal = 0;
+            const tasks = getTasks();
+            doc.setFont(undefined, "normal");
+            doc.setTextColor(0, 0, 0);
+            
+            tasks.forEach(task => {
+                if (task.description.trim() !== "" || task.amount > 0) {
+                    let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
+                    doc.text(descText, 16, y);
+                    doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
+                    subtotal += task.amount;
+                    y += 5.5;
+                    if (y > 210) { doc.addPage(); y = 20; }
+                }
+            });
+            
+            if (tasks.length === 0) {
+                doc.text("-- No tasks added --", 16, y);
                 y += 5.5;
-                if (y > 230) { doc.addPage(); y = 20; }
             }
-        });
-        
-        if (tasks.length === 0) {
-            doc.text("-- No tasks added --", 16, y);
-            y += 5.5;
-        }
-        
-        // Extra charges, discount, tip
-        const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
-        const discount = parseFloat(document.getElementById("discountAmount")?.value) || 0;
-        const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
-        
-        if (extra > 0) {
-            doc.text("Extra charges (parts/labour)", 16, y);
-            doc.text(`R ${extra.toFixed(2)}`, 160, y);
-            subtotal += extra;
-            y += 5;
-        }
-        if (discount > 0) {
-            doc.text("Discount applied", 16, y);
-            doc.text(`- R ${discount.toFixed(2)}`, 160, y);
-            subtotal -= discount;
-            y += 5;
-        }
-        if (tip > 0) {
-            doc.text("Tip / Gratuity", 16, y);
-            doc.text(`R ${tip.toFixed(2)}`, 160, y);
-            subtotal += tip;
-            y += 5;
-        }
-        
-        const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
-        let grandTotal = subtotal;
-        let balanceDue = grandTotal - amountPaid;
-        if (balanceDue < 0) balanceDue = 0;
-        
-        y += 2;
-        doc.setDrawColor(185, 28, 28);
-        doc.line(14, y-2, 196, y-2);
-        doc.setFont(undefined, "bold");
-        doc.setTextColor(185, 28, 28);
-        doc.text(`TOTAL: R ${grandTotal.toFixed(2)}`, 140, y+2);
-        y += 7;
-        
-        if (mode === "invoice") {
-            doc.text(`Amount Paid: R ${amountPaid.toFixed(2)}`, 140, y);
-            y += 5;
-            doc.text(`Balance Due: R ${balanceDue.toFixed(2)}`, 140, y);
+            
+            // Extra charges, discount, tip
+            const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
+            const discount = parseFloat(document.getElementById("discountAmount")?.value) || 0;
+            const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
+            
+            if (extra > 0) {
+                doc.text("Extra charges (parts/labour)", 16, y);
+                doc.text(`R ${extra.toFixed(2)}`, 160, y);
+                subtotal += extra;
+                y += 5;
+            }
+            if (discount > 0) {
+                doc.text("Discount applied", 16, y);
+                doc.text(`- R ${discount.toFixed(2)}`, 160, y);
+                subtotal -= discount;
+                y += 5;
+            }
+            if (tip > 0) {
+                doc.text("Tip / Gratuity", 16, y);
+                doc.text(`R ${tip.toFixed(2)}`, 160, y);
+                subtotal += tip;
+                y += 5;
+            }
+            
+            const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
+            let grandTotal = subtotal;
+            let balanceDue = grandTotal - amountPaid;
+            if (balanceDue < 0) balanceDue = 0;
+            
+            y += 2;
+            doc.setDrawColor(185, 28, 28);
+            doc.line(14, y-2, 196, y-2);
+            doc.setFont(undefined, "bold");
+            doc.setTextColor(185, 28, 28);
+            doc.text(`TOTAL: R ${grandTotal.toFixed(2)}`, 140, y+2);
             y += 7;
-            if (paidEnabled || (amountPaid >= grandTotal && grandTotal > 0)) {
-                doc.setTextColor(40, 160, 60);
-                doc.text("✓ PAID IN FULL", 140, y);
-            } else if (amountPaid > 0 && amountPaid < grandTotal) {
-                doc.setTextColor(185, 28, 28);
-                doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
+            
+            if (mode === "invoice") {
+                doc.text(`Amount Paid: R ${amountPaid.toFixed(2)}`, 140, y);
+                y += 5;
+                doc.text(`Balance Due: R ${balanceDue.toFixed(2)}`, 140, y);
+                y += 7;
+                if (paidEnabled || (amountPaid >= grandTotal && grandTotal > 0)) {
+                    doc.setTextColor(40, 160, 60);
+                    doc.text("✓ PAID IN FULL", 140, y);
+                } else if (amountPaid > 0 && amountPaid < grandTotal) {
+                    doc.setTextColor(185, 28, 28);
+                    doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
+                }
             }
-        }
-        
-        // BANKING DETAILS - BOTTOM LEFT FOR BOTH INVOICE AND QUOTATION
-        let bankY = doc.internal.pageSize.height - 28;
-        doc.setFontSize(7);
-        doc.setTextColor(185, 28, 28);
-        doc.text("BANKING DETAILS", 15, bankY);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
-        doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
-        
-        // Footer
-        let footerY = doc.internal.pageSize.height - 10;
-        doc.setFontSize(6);
-        doc.setTextColor(120, 120, 120);
-        doc.text("HOZ Auto Electrical & Diagnostics · Thank you for your business!", 15, footerY);
-        
-        // Save PDF
-        const pdfBlob = doc.output("blob");
-        const fileName = `${invoiceRef}.pdf`;
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        const a = document.createElement("a");
-        a.href = pdfUrl;
-        a.download = fileName;
-        a.click();
-        
-        setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
+            
+            // BANKING DETAILS - BOTTOM LEFT
+            let bankY = doc.internal.pageSize.height - 45;
+            doc.setFontSize(7);
+            doc.setTextColor(185, 28, 28);
+            doc.text("BANKING DETAILS", 15, bankY);
+            doc.setTextColor(0, 0, 0);
+            doc.text("Capitec Bank | Account Holder: Mr AN Ramalepe", 15, bankY+4);
+            doc.text("Account Number: 1679556728 | Contact: 073 725 2514", 15, bankY+8);
+            
+            // LOGO AT BOTTOM LEFT (using pre-loaded image data)
+            let logoY = doc.internal.pageSize.height - 22;
+            if (logoLoaded && logoImgData) {
+                try {
+                    // Resize logo to fit (max width 35mm, max height 15mm)
+                    doc.addImage(logoImgData, 'PNG', 15, logoY-12, 30, 12);
+                } catch(e) {
+                    console.log("Logo add error:", e);
+                    doc.setFontSize(7);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text("[HOZ AUTO]", 15, logoY-4);
+                }
+            } else {
+                doc.setFontSize(7);
+                doc.setTextColor(150, 150, 150);
+                doc.text("[HOZ AUTO]", 15, logoY-4);
+            }
+            
+            // PAID STAMP - appears when paidEnabled is true (only on invoice mode)
+            if (mode === "invoice" && paidEnabled) {
+                let paidY = doc.internal.pageSize.height - 22;
+                if (paidLoaded && paidImgData) {
+                    try {
+                        doc.addImage(paidImgData, 'PNG', 50, paidY-12, 22, 12);
+                    } catch(e) {
+                        doc.setFontSize(9);
+                        doc.setTextColor(40, 160, 60);
+                        doc.text("✓ PAID", 52, paidY-4);
+                    }
+                } else {
+                    doc.setFontSize(9);
+                    doc.setTextColor(40, 160, 60);
+                    doc.text("✓ PAID", 52, paidY-4);
+                }
+            }
+            
+            // Footer
+            let footerY = doc.internal.pageSize.height - 8;
+            doc.setFontSize(6);
+            doc.setTextColor(120, 120, 120);
+            doc.text("HOZ Auto Electrical & Diagnostics · Thank you for your business!", 15, footerY);
+            
+            // Save PDF
+            const pdfBlob = doc.output("blob");
+            const fileName = `${invoiceRef}.pdf`;
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const a = document.createElement("a");
+            a.href = pdfUrl;
+            a.download = fileName;
+            a.click();
+            
+            setTimeout(() => {
+                URL.revokeObjectURL(pdfUrl);
+                loadingDiv.style.display = "none";
+            }, 500);
+        }, 100);
     }
     
     setMode("invoice");
