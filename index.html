@@ -161,15 +161,13 @@
         input::placeholder, textarea::placeholder {
             color: #5a5a5a;
         }
-        /* Gray out zero values in task price inputs */
-        .task-price-input[value="0"], 
-        .task-price-input[value="0.00"],
-        .task-price-input[value="0"]:placeholder-shown {
-            color: #6a6a6a;
-            opacity: 0.7;
-        }
+        /* Style for price hint */
         .task-price-input {
-            transition: color 0.1s;
+            color: white;
+        }
+        .task-price-input::placeholder {
+            color: #6a6a6a;
+            font-style: italic;
         }
         .section-title {
             grid-column: span 2;
@@ -453,20 +451,19 @@
         return canvas.toDataURL('image/png', 0.8);
     }
 
-    // Load logo.png from assets - with absolute path handling
+    // Load logo.png from assets
     const logoImg = new Image();
     logoImg.onload = function() {
         logoLoaded = true;
-        // Crop to perfect square and resize to 70x70 for clean display
         logoImgData = cropToSquareAndResize(logoImg, 70);
         imageStatus.innerHTML = '✅ Logo loaded (square) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#88ff88';
     };
     logoImg.onerror = function() {
         logoLoaded = false;
-        imageStatus.innerHTML = '⚠️ logo.png not found in assets folder (using text logo) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        imageStatus.innerHTML = '⚠️ logo.png not found (using text logo) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#ff8888';
-        // Create a text-based fallback logo (simple square with initials)
+        // Create a text-based fallback logo
         const canvas = document.createElement('canvas');
         canvas.width = 70;
         canvas.height = 70;
@@ -481,7 +478,6 @@
         logoImgData = canvas.toDataURL('image/png');
         logoLoaded = true;
     };
-    // Try multiple possible paths for logo
     logoImg.src = "assets/logo.png?" + Date.now();
 
     // Load paid.png
@@ -489,7 +485,6 @@
     paidImg.onload = function() {
         paidLoaded = true;
         const canvas = document.createElement('canvas');
-        // Keep aspect ratio but resize for stamp
         let width = paidImg.width;
         let height = paidImg.height;
         let maxW = 80;
@@ -512,30 +507,10 @@
     };
     paidImg.onerror = function() {
         paidLoaded = false;
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded (square)' : '⚠️ logo missing') + ' | ⚠️ paid.png not found (using text stamp)';
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded (square)' : '⚠️ logo missing') + ' | ⚠️ paid.png not found';
         imageStatus.style.color = '#ff8888';
     };
     paidImg.src = "assets/paid.png?" + Date.now();
-
-    // Function to update price input styling (gray out zero)
-    function updatePriceInputStyle(input) {
-        let val = parseFloat(input.value);
-        if (isNaN(val) || val === 0) {
-            input.style.color = '#6a6a6a';
-            input.style.opacity = '0.7';
-        } else {
-            input.style.color = 'white';
-            input.style.opacity = '1';
-        }
-    }
-
-    // Monitor price inputs for styling
-    function attachPriceInputListener(input) {
-        input.addEventListener('input', function() {
-            updatePriceInputStyle(this);
-        });
-        updatePriceInputStyle(input);
-    }
 
     function setMode(selectedMode) {
         mode = selectedMode;
@@ -567,16 +542,11 @@
         taskDiv.className = "task-item";
         taskDiv.setAttribute("data-id", taskCounter);
         taskDiv.innerHTML = `
-            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description" value=""></div>
-            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="0" step="0.01"></div>
+            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="e.g., Alternator repair, Battery replacement" value=""></div>
+            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R) - leave empty for free" step="0.01" value=""></div>
             <button class="remove-task" onclick="removeTask(this)">✖</button>
         `;
         container.appendChild(taskDiv);
-        
-        // Attach styling listener to the new price input
-        const priceInput = taskDiv.querySelector('.task-price-input');
-        attachPriceInputListener(priceInput);
-        
         taskCounter++;
     }
 
@@ -593,9 +563,14 @@
         }
         document.querySelectorAll(".task-item").forEach(item => {
             const desc = item.querySelector(".task-desc-input")?.value || "";
-            const price = parseFloat(item.querySelector(".task-price-input")?.value) || 0;
+            const priceInput = item.querySelector(".task-price-input")?.value;
+            // Only add task if description is not empty OR price is greater than 0
+            let price = 0;
+            if (priceInput !== null && priceInput !== undefined && priceInput !== "") {
+                price = parseFloat(priceInput) || 0;
+            }
             if (desc.trim() !== "" || price > 0) {
-                tasks.push({ description: desc, amount: price });
+                tasks.push({ description: desc || "Unnamed task", amount: price });
             }
         });
         return tasks;
@@ -617,7 +592,6 @@
         const loadingDiv = document.getElementById("loadingIndicator");
         loadingDiv.style.display = "block";
         
-        // Small delay to ensure loading indicator shows
         setTimeout(() => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
@@ -632,17 +606,16 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // LOGO - Perfect square (now visible with fallback)
+            // LOGO - Perfect square
             if (logoImgData) {
                 try {
-                    // Square logo: 25mm width, 25mm height (perfect square)
                     doc.addImage(logoImgData, 'PNG', 15, 4, 25, 25);
                 } catch(e) {
                     console.log("Logo add error:", e);
                 }
             }
             
-            // Header text (shifted right to accommodate larger square logo)
+            // Header text
             let headerX = (logoImgData) ? 48 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
@@ -685,14 +658,16 @@
             doc.setTextColor(0, 0, 0);
             
             tasks.forEach(task => {
-                if (task.description.trim() !== "" || task.amount > 0) {
-                    let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
-                    doc.text(descText, 16, y);
+                let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
+                doc.text(descText, 16, y);
+                if (task.amount > 0) {
                     doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                     subtotal += task.amount;
-                    y += 5.5;
-                    if (y > 230) { doc.addPage(); y = 20; }
+                } else {
+                    doc.text("Free / Included", 160, y);
                 }
+                y += 5.5;
+                if (y > 230) { doc.addPage(); y = 20; }
             });
             
             if (tasks.length === 0) {
@@ -751,7 +726,7 @@
                 }
             }
             
-            // BANKING DETAILS - ONLY ON QUOTATION MODE (NOT ON INVOICE)
+            // BANKING DETAILS - ONLY ON QUOTATION MODE
             if (mode === "quotation") {
                 let bankY = doc.internal.pageSize.height - 35;
                 doc.setFontSize(7);
@@ -762,7 +737,7 @@
                 doc.text("Account Number: 1341809366 | PayShap: 0836813973@nedbank", 15, bankY+8);
             }
             
-            // PAID STAMP - appears when paidEnabled is true (only on invoice mode)
+            // PAID STAMP
             if (mode === "invoice" && paidEnabled) {
                 let paidY = doc.internal.pageSize.height - 22;
                 if (paidLoaded && paidImgData) {
@@ -786,13 +761,10 @@
             doc.setTextColor(120, 120, 120);
             doc.text("HOZ Auto Electrical & Diagnostics · Thank you !", 15, footerY);
             
-            // ==========================================
-            // SAVE + SHARE
-            // ==========================================
             const pdfBlob = doc.output("blob");
             const fileName = invoiceRef + ".pdf";
             
-            // Auto Download the PDF file
+            // Auto Download
             const pdfUrl = URL.createObjectURL(pdfBlob);
             const a = document.createElement("a");
             a.href = pdfUrl;
@@ -812,7 +784,6 @@
                 });
             }
             
-            // Cleanup and hide loading indicator
             setTimeout(() => {
                 URL.revokeObjectURL(pdfUrl);
                 loadingDiv.style.display = "none";
@@ -820,15 +791,11 @@
         }, 100);
     }
     
-    // Initialize with one empty task that has grayed out zero
+    // Initialize with one empty task that has placeholder hint
     function initialize() {
         setMode("invoice");
-        // Add one empty task as example with grayed out zero
+        // Add one empty task with placeholder hints
         addTask();
-        // Apply styling to all existing price inputs
-        document.querySelectorAll('.task-price-input').forEach(input => {
-            attachPriceInputListener(input);
-        });
     }
     
     initialize();
