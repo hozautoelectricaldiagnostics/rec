@@ -307,12 +307,21 @@
             text-align: center;
             margin-top: 5px;
         }
+        .extra-charges-grid {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
         @media (max-width: 760px) {
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            .section-title, .repair-task-row, .generate-btn, .note, .image-note {
+            .section-title, .repair-task-row, .generate-btn, .note, .image-note, .extra-charges-grid {
                 grid-column: span 1;
+            }
+            .extra-charges-grid {
+                grid-template-columns: 1fr;
             }
         }
         hr {
@@ -398,10 +407,13 @@
 
         <!-- EXTRA CHARGES & ADJUSTMENTS -->
         <div class="section-title">💰 EXTRA CHARGES & ADJUSTMENTS</div>
-        <div class="field-group"><label>➕ PARTS (R)</label><input type="number" id="extraCharges" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="field-group"><label>🎁 DISCOUNT (R)</label><input type="number" id="discountAmount" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
-        <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="extra-charges-grid">
+            <div class="field-group"><label>🔧 LABOUR (R)</label><input type="number" id="labourCharges" min="0" step="0.01" placeholder="0.00"></div>
+            <div class="field-group"><label>➕ PARTS (R)</label><input type="number" id="extraCharges" min="0" step="0.01" placeholder="0.00"></div>
+            <div class="field-group"><label>🎁 DISCOUNT (R)</label><input type="number" id="discountAmount" min="0" step="0.01" placeholder="0.00"></div>
+            <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
+            <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
+        </div>
 
         <div class="image-note" id="imageStatus">
             🔄 Checking images in "assets" folder...
@@ -417,11 +429,13 @@
     let paidEnabled = false;
     let taskCounter = 0;
     
-    // Pre-load images with proper error handling
+    // Pre-load images with proper error handling - NO CROPPING, preserve original aspect ratio
     let logoLoaded = false;
     let paidLoaded = false;
     let logoImgData = null;
     let paidImgData = null;
+    let logoWidth = 0;
+    let logoHeight = 0;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
@@ -430,80 +444,70 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    // Function to crop image into perfect square and resize
-    function cropToSquareAndResize(imgElement, targetSize = 70) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        const minDim = Math.min(imgElement.width, imgElement.height);
-        const cropX = (imgElement.width - minDim) / 2;
-        const cropY = (imgElement.height - minDim) / 2;
-        
-        canvas.width = targetSize;
-        canvas.height = targetSize;
-        
-        ctx.drawImage(imgElement, cropX, cropY, minDim, minDim, 0, 0, targetSize, targetSize);
-        
-        return canvas.toDataURL('image/png', 0.8);
-    }
-
-    // Load logo.png
+    // Load logo.png - preserve original dimensions
     const logoImg = new Image();
+    logoImg.crossOrigin = "Anonymous";
     logoImg.onload = function() {
         logoLoaded = true;
-        logoImgData = cropToSquareAndResize(logoImg, 70);
-        imageStatus.innerHTML = '✅ Logo loaded (square) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        logoWidth = logoImg.width;
+        logoHeight = logoImg.height;
+        // Calculate display size while preserving aspect ratio
+        const canvas = document.createElement('canvas');
+        let displayWidth = logoImg.width;
+        let displayHeight = logoImg.height;
+        // Max dimensions for PDF (approx 25mm width max)
+        if (displayWidth > 100) {
+            const ratio = displayHeight / displayWidth;
+            displayWidth = 100;
+            displayHeight = displayWidth * ratio;
+        }
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(logoImg, 0, 0, displayWidth, displayHeight);
+        logoImgData = canvas.toDataURL('image/png', 0.9);
+        imageStatus.innerHTML = '✅ Logo loaded | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#88ff88';
     };
     logoImg.onerror = function() {
         logoLoaded = false;
-        imageStatus.innerHTML = '⚠️ logo.png not found (using text logo) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        imageStatus.innerHTML = '⚠️ logo.png not found in assets folder | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#ff8888';
-        // Fallback text logo
-        const canvas = document.createElement('canvas');
-        canvas.width = 70;
-        canvas.height = 70;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#b91c1c';
-        ctx.fillRect(0, 0, 70, 70);
-        ctx.fillStyle = '#f5b042';
-        ctx.font = 'bold 28px system-ui';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('HA', 35, 38);
-        logoImgData = canvas.toDataURL('image/png');
-        logoLoaded = true;
     };
     logoImg.src = "assets/logo.png?" + Date.now();
 
-    // Load paid.png
+    // Load paid.png - preserve original aspect ratio
     const paidImg = new Image();
+    paidImg.crossOrigin = "Anonymous";
     paidImg.onload = function() {
         paidLoaded = true;
         const canvas = document.createElement('canvas');
+        // Keep original aspect ratio
         let width = paidImg.width;
         let height = paidImg.height;
         let maxW = 80;
         let maxH = 35;
         if (width > maxW) {
-            height = (height * maxW) / width;
+            const ratio = height / width;
             width = maxW;
+            height = width * ratio;
         }
         if (height > maxH) {
-            width = (width * maxH) / height;
+            const ratio = width / height;
             height = maxH;
+            width = height * ratio;
         }
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(paidImg, 0, 0, width, height);
-        paidImgData = canvas.toDataURL('image/png', 0.7);
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded (square)' : '⚠️ logo missing') + ' | ✅ Paid stamp loaded';
+        paidImgData = canvas.toDataURL('image/png', 0.8);
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
         imageStatus.style.color = '#88ff88';
     };
     paidImg.onerror = function() {
         paidLoaded = false;
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded (square)' : '⚠️ logo missing') + ' | ⚠️ paid.png not found';
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ⚠️ paid.png not found in assets folder';
         imageStatus.style.color = '#ff8888';
     };
     paidImg.src = "assets/paid.png?" + Date.now();
@@ -565,7 +569,6 @@
                 price = parseFloat(priceInput);
                 if (isNaN(price)) price = null;
             }
-            // Only add if description is not empty OR price is valid and > 0
             if (desc.trim() !== "" || (price !== null && price > 0)) {
                 tasks.push({ 
                     description: desc.trim() || "Unnamed task", 
@@ -606,14 +609,21 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // LOGO
-            if (logoImgData) {
+            // LOGO - Original size preserved (25mm width, auto height to maintain aspect ratio)
+            if (logoLoaded && logoImgData) {
                 try {
-                    doc.addImage(logoImgData, 'PNG', 15, 4, 25, 25);
-                } catch(e) { console.log("Logo add error:", e); }
+                    // Calculate height to preserve aspect ratio (approx 25mm width)
+                    const logoAspectRatio = logoHeight / logoWidth;
+                    const logoWidthMm = 25;
+                    const logoHeightMm = logoWidthMm * logoAspectRatio;
+                    doc.addImage(logoImgData, 'PNG', 15, 5, logoWidthMm, logoHeightMm);
+                } catch(e) {
+                    console.log("Logo add error:", e);
+                }
             }
             
-            let headerX = (logoImgData) ? 48 : 15;
+            // Header text (shifted right to accommodate logo)
+            let headerX = logoLoaded ? 48 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
             doc.setTextColor(0, 0, 0);
@@ -661,7 +671,6 @@
                     doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                     subtotal += task.amount;
                 } else {
-                    // Show dash for no charge / zero amount
                     doc.text("—", 160, y);
                 }
                 y += 5.5;
@@ -673,11 +682,18 @@
                 y += 5.5;
             }
             
-            // Extra charges, discount, tip
+            // EXTRA CHARGES - Labour, Parts, Discount, Tip
+            const labour = parseFloat(document.getElementById("labourCharges")?.value) || 0;
             const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
             const discount = parseFloat(document.getElementById("discountAmount")?.value) || 0;
             const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
             
+            if (labour > 0) {
+                doc.text("Labour Charges", 16, y);
+                doc.text(`R ${labour.toFixed(2)}`, 160, y);
+                subtotal += labour;
+                y += 5;
+            }
             if (extra > 0) {
                 doc.text("Parts / Materials", 16, y);
                 doc.text(`R ${extra.toFixed(2)}`, 160, y);
@@ -720,7 +736,7 @@
                     doc.text("✓ PAID IN FULL", 140, y);
                 } else if (amountPaid > 0 && amountPaid < grandTotal) {
                     doc.setTextColor(185, 28, 28);
-                    doc.text("⏳ PARTIAL PAYMENT", 140, y);
+                    doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
                 }
             }
             
