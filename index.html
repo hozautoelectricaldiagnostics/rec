@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Hoz Auto Electrical · Repair Invoice & Receipt</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
@@ -166,11 +167,6 @@
             width: 100%;
             color: white;
             transition: 0.2s;
-        }
-
-        textarea {
-            resize: vertical;
-            font-family: inherit;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -510,16 +506,34 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    function imageToDataURLOriginal(imgElement) {
+    function imageToDataURLBalanced(imgElement, maxPixelWidth = 900) {
+        const originalWidth = imgElement.naturalWidth || imgElement.width;
+        const originalHeight = imgElement.naturalHeight || imgElement.height;
+
+        let newWidth = originalWidth;
+        let newHeight = originalHeight;
+
+        if (originalWidth > maxPixelWidth) {
+            newWidth = maxPixelWidth;
+            newHeight = Math.round((originalHeight * maxPixelWidth) / originalWidth);
+        }
+
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        canvas.width = imgElement.naturalWidth || imgElement.width;
-        canvas.height = imgElement.naturalHeight || imgElement.height;
+        canvas.width = newWidth;
+        canvas.height = newHeight;
 
-        ctx.drawImage(imgElement, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
 
-        return canvas.toDataURL("image/png");
+        ctx.drawImage(imgElement, 0, 0, newWidth, newHeight);
+
+        return {
+            dataUrl: canvas.toDataURL("image/jpeg", 0.82),
+            width: newWidth,
+            height: newHeight
+        };
     }
 
     function getDisplaySizeFromPixels(pixelWidth, pixelHeight, maxWidthMM, maxHeightMM) {
@@ -544,14 +558,15 @@
     logoImg.onload = function () {
         logoLoaded = true;
 
-        logoOriginalWidth = logoImg.naturalWidth || logoImg.width;
-        logoOriginalHeight = logoImg.naturalHeight || logoImg.height;
+        const result = imageToDataURLBalanced(logoImg, 900);
 
-        logoImgData = imageToDataURLOriginal(logoImg);
+        logoImgData = result.dataUrl;
+        logoOriginalWidth = result.width;
+        logoOriginalHeight = result.height;
 
         imageStatus.innerHTML =
-            "✅ Logo loaded in original quality | " +
-            (paidLoaded ? "✅ Paid stamp loaded in original quality" : "⏳ Loading paid stamp...");
+            "✅ Logo loaded with balanced quality | " +
+            (paidLoaded ? "✅ Paid stamp loaded with balanced quality" : "⏳ Loading paid stamp...");
 
         imageStatus.style.color = "#88ff88";
     };
@@ -562,7 +577,7 @@
 
         imageStatus.innerHTML =
             "⚠️ logo.png not found in assets folder | " +
-            (paidLoaded ? "✅ Paid stamp loaded in original quality" : "⏳ Loading paid stamp...");
+            (paidLoaded ? "✅ Paid stamp loaded with balanced quality" : "⏳ Loading paid stamp...");
 
         imageStatus.style.color = "#ff8888";
     };
@@ -574,14 +589,15 @@
     paidImg.onload = function () {
         paidLoaded = true;
 
-        paidOriginalWidth = paidImg.naturalWidth || paidImg.width;
-        paidOriginalHeight = paidImg.naturalHeight || paidImg.height;
+        const result = imageToDataURLBalanced(paidImg, 700);
 
-        paidImgData = imageToDataURLOriginal(paidImg);
+        paidImgData = result.dataUrl;
+        paidOriginalWidth = result.width;
+        paidOriginalHeight = result.height;
 
         imageStatus.innerHTML =
-            (logoLoaded ? "✅ Logo loaded in original quality" : "⚠️ logo.png missing") +
-            " | ✅ Paid stamp loaded in original quality";
+            (logoLoaded ? "✅ Logo loaded with balanced quality" : "⚠️ logo.png missing") +
+            " | ✅ Paid stamp loaded with balanced quality";
 
         imageStatus.style.color = "#88ff88";
     };
@@ -591,7 +607,7 @@
         paidImgData = null;
 
         imageStatus.innerHTML =
-            (logoLoaded ? "✅ Logo loaded in original quality" : "⚠️ logo.png missing") +
+            (logoLoaded ? "✅ Logo loaded with balanced quality" : "⚠️ logo.png missing") +
             " | ⚠️ paid.png not found in assets folder";
 
         imageStatus.style.color = "#ff8888";
@@ -761,7 +777,7 @@
 
                     doc.addImage(
                         logoImgData,
-                        "PNG",
+                        "JPEG",
                         15,
                         4,
                         logoSize.width,
@@ -967,7 +983,7 @@
 
                         doc.addImage(
                             paidImgData,
-                            "PNG",
+                            "JPEG",
                             15,
                             paidY,
                             paidSize.width,
