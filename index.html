@@ -161,13 +161,6 @@
         input::placeholder, textarea::placeholder {
             color: #5a5a5a;
         }
-        .task-price-input {
-            color: white;
-        }
-        .task-price-input::placeholder {
-            color: #6a6a6a;
-            font-style: italic;
-        }
         .section-title {
             grid-column: span 2;
             font-weight: 700;
@@ -307,21 +300,12 @@
             text-align: center;
             margin-top: 5px;
         }
-        .extra-charges-grid {
-            grid-column: span 2;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
         @media (max-width: 760px) {
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            .section-title, .repair-task-row, .generate-btn, .note, .image-note, .extra-charges-grid {
+            .section-title, .repair-task-row, .generate-btn, .note, .image-note {
                 grid-column: span 1;
-            }
-            .extra-charges-grid {
-                grid-template-columns: 1fr;
             }
         }
         hr {
@@ -339,13 +323,11 @@
             border-radius: 10px;
             z-index: 9999;
             display: none;
-            font-weight: bold;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
-<div class="loading" id="loadingIndicator">📄 Generating PDF ...</div>
+<div class="loading" id="loadingIndicator">Generating PDF with images...</div>
 
 <div class="card">
     <h1><span>HOZ</span> <span>AUTO</span></h1>
@@ -407,13 +389,10 @@
 
         <!-- EXTRA CHARGES & ADJUSTMENTS -->
         <div class="section-title">💰 EXTRA CHARGES & ADJUSTMENTS</div>
-        <div class="extra-charges-grid">
-            <div class="field-group"><label>🔧 LABOUR (R)</label><input type="number" id="labourCharges" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field-group"><label>➕ PARTS (R)</label><input type="number" id="extraCharges" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field-group"><label>🎁 DISCOUNT (R)</label><input type="number" id="discountAmount" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
-        </div>
+        <div class="field-group"><label>➕ PARTS (R)</label><input type="number" id="extraCharges" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field-group"><label>🎁 DISCOUNT (R)</label><input type="number" id="discountAmount" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field-group"><label>💸 TIP / GRATUITY (R)</label><input type="number" id="tipAmount" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
 
         <div class="image-note" id="imageStatus">
             🔄 Checking images in "assets" folder...
@@ -429,13 +408,11 @@
     let paidEnabled = false;
     let taskCounter = 0;
     
-    // Pre-load images with proper error handling - NO CROPPING, preserve original aspect ratio
+    // Pre-load images with proper error handling
     let logoLoaded = false;
     let paidLoaded = false;
     let logoImgData = null;
     let paidImgData = null;
-    let logoWidth = 0;
-    let logoHeight = 0;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
@@ -444,29 +421,18 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    // Load logo.png - preserve original dimensions
+    // Load logo.png
     const logoImg = new Image();
     logoImg.crossOrigin = "Anonymous";
     logoImg.onload = function() {
         logoLoaded = true;
-        logoWidth = logoImg.width;
-        logoHeight = logoImg.height;
-        // Calculate display size while preserving aspect ratio
         const canvas = document.createElement('canvas');
-        let displayWidth = logoImg.width;
-        let displayHeight = logoImg.height;
-        // Max dimensions for PDF (approx 25mm width max)
-        if (displayWidth > 100) {
-            const ratio = displayHeight / displayWidth;
-            displayWidth = 100;
-            displayHeight = displayWidth * ratio;
-        }
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
+        canvas.width = logoImg.width;
+        canvas.height = logoImg.height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(logoImg, 0, 0, displayWidth, displayHeight);
-        logoImgData = canvas.toDataURL('image/png', 0.9);
-        imageStatus.innerHTML = '✅ Logo loaded | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        ctx.drawImage(logoImg, 0, 0);
+        logoImgData = canvas.toDataURL('image/png');
+        imageStatus.innerHTML = '✅ Logo loaded successfully | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#88ff88';
     };
     logoImg.onerror = function() {
@@ -476,32 +442,17 @@
     };
     logoImg.src = "assets/logo.png?" + Date.now();
 
-    // Load paid.png - preserve original aspect ratio
+    // Load paid.png
     const paidImg = new Image();
     paidImg.crossOrigin = "Anonymous";
     paidImg.onload = function() {
         paidLoaded = true;
         const canvas = document.createElement('canvas');
-        // Keep original aspect ratio
-        let width = paidImg.width;
-        let height = paidImg.height;
-        let maxW = 80;
-        let maxH = 35;
-        if (width > maxW) {
-            const ratio = height / width;
-            width = maxW;
-            height = width * ratio;
-        }
-        if (height > maxH) {
-            const ratio = width / height;
-            height = maxH;
-            width = height * ratio;
-        }
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = paidImg.width;
+        canvas.height = paidImg.height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(paidImg, 0, 0, width, height);
-        paidImgData = canvas.toDataURL('image/png', 0.8);
+        ctx.drawImage(paidImg, 0, 0);
+        paidImgData = canvas.toDataURL('image/png');
         imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
         imageStatus.style.color = '#88ff88';
     };
@@ -542,8 +493,8 @@
         taskDiv.className = "task-item";
         taskDiv.setAttribute("data-id", taskCounter);
         taskDiv.innerHTML = `
-            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="e.g., Alternator repair, Battery replacement" value=""></div>
-            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R) - leave empty for no charge" step="0.01" value=""></div>
+            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Task description" value=""></div>
+            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" value="0"></div>
             <button class="remove-task" onclick="removeTask(this)">✖</button>
         `;
         container.appendChild(taskDiv);
@@ -563,17 +514,9 @@
         }
         document.querySelectorAll(".task-item").forEach(item => {
             const desc = item.querySelector(".task-desc-input")?.value || "";
-            const priceInput = item.querySelector(".task-price-input")?.value;
-            let price = null;
-            if (priceInput !== null && priceInput !== undefined && priceInput !== "") {
-                price = parseFloat(priceInput);
-                if (isNaN(price)) price = null;
-            }
-            if (desc.trim() !== "" || (price !== null && price > 0)) {
-                tasks.push({ 
-                    description: desc.trim() || "Unnamed task", 
-                    amount: (price !== null && price > 0) ? price : 0
-                });
+            const price = parseFloat(item.querySelector(".task-price-input")?.value) || 0;
+            if (desc.trim() !== "" || price > 0) {
+                tasks.push({ description: desc, amount: price });
             }
         });
         return tasks;
@@ -582,13 +525,13 @@
     function getNextDocumentNumber() {
         let storageKey = mode === "invoice" ? "HOZ_invoiceCounter" : "HOZ_quotationCounter";
         let lastNumber = parseInt(localStorage.getItem(storageKey));
-        if (isNaN(lastNumber) || lastNumber < 70) {
-            lastNumber = 70;
+        if (isNaN(lastNumber) || lastNumber < 100) {
+            lastNumber = 100;
         } else {
             lastNumber += 1;
         }
         localStorage.setItem(storageKey, lastNumber);
-        return String(lastNumber).padStart(3, "0");
+        return String(lastNumber);
     }
 
     function generatePDF() {
@@ -609,35 +552,24 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // LOGO - Original size preserved (25mm width, auto height to maintain aspect ratio)
+            // LOGO AT TOP LEFT CORNER (before business name)
             if (logoLoaded && logoImgData) {
                 try {
-                    // Calculate height to preserve aspect ratio (approx 25mm width)
-                    const logoAspectRatio = logoHeight / logoWidth;
-                    const logoWidthMm = 40; // bigger logo for better visibility
-                    const logoHeightMm = logoWidthMm * logoAspectRatio;
-                    const logoX = 15;
-                    const logoY = 8;
-
-                    // Light background behind logo so it is visible on PDF
-                    doc.setFillColor(245, 245, 245);
-                    doc.roundedRect(13, logoY - 2, 44, logoHeightMm + 4, 3, 3, 'F');
-
-                    doc.addImage(logoImgData, 'PNG', logoX, logoY, logoWidthMm, logoHeightMm);
+                    doc.addImage(logoImgData, 'PNG', 15, 5, 25, 12);
                 } catch(e) {
                     console.log("Logo add error:", e);
                 }
             }
             
             // Header text (shifted right to accommodate logo)
-            let headerX = logoLoaded ? 60 : 15;
+            let headerX = logoLoaded ? 45 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
             doc.setTextColor(0, 0, 0);
-            doc.text("HOZ AUTO ELECTRICAL", headerX, 18);
+            doc.text("HOZ AUTO ELECTRICAL", headerX, 12);
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
-            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerX, 24);
+            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerX, 18);
             
             doc.setFontSize(12);
             doc.setTextColor(185, 28, 28);
@@ -647,7 +579,7 @@
             doc.text(invoiceRef, 155, 22);
             doc.text(`Date: ${today}`, 155, 28);
             
-            y = 42;
+            y = 38;
             doc.setFontSize(8);
             doc.setTextColor(185, 28, 28);
             doc.text("BILL TO:", 15, y);
@@ -656,7 +588,7 @@
             doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
             doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
             
-            y = 66;
+            y = 62;
             // Table headers
             doc.setFillColor(240, 240, 240);
             doc.rect(14, y-3, 182, 7, 'F');
@@ -672,16 +604,14 @@
             doc.setTextColor(0, 0, 0);
             
             tasks.forEach(task => {
-                let descText = task.description.length > 48 ? task.description.substring(0, 45) + "..." : task.description;
-                doc.text(descText, 16, y);
-                if (task.amount > 0) {
+                if (task.description.trim() !== "" || task.amount > 0) {
+                    let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
+                    doc.text(descText, 16, y);
                     doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                     subtotal += task.amount;
-                } else {
-                    doc.text("—", 160, y);
+                    y += 5.5;
+                    if (y > 230) { doc.addPage(); y = 20; }
                 }
-                y += 5.5;
-                if (y > 250) { doc.addPage(); y = 20; }
             });
             
             if (tasks.length === 0) {
@@ -689,26 +619,19 @@
                 y += 5.5;
             }
             
-            // EXTRA CHARGES - Labour, Parts, Discount, Tip
-            const labour = parseFloat(document.getElementById("labourCharges")?.value) || 0;
+            // Extra charges, discount, tip
             const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
             const discount = parseFloat(document.getElementById("discountAmount")?.value) || 0;
             const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
             
-            if (labour > 0) {
-                doc.text("Labour Charges", 16, y);
-                doc.text(`R ${labour.toFixed(2)}`, 160, y);
-                subtotal += labour;
-                y += 5;
-            }
             if (extra > 0) {
-                doc.text("Parts / Materials", 16, y);
+                doc.text("Parts", 16, y);
                 doc.text(`R ${extra.toFixed(2)}`, 160, y);
                 subtotal += extra;
                 y += 5;
             }
             if (discount > 0) {
-                doc.text("Discount", 16, y);
+                doc.text("Discount applied", 16, y);
                 doc.text(`- R ${discount.toFixed(2)}`, 160, y);
                 subtotal -= discount;
                 y += 5;
@@ -725,7 +648,7 @@
             let balanceDue = grandTotal - amountPaid;
             if (balanceDue < 0) balanceDue = 0;
             
-            y += 3;
+            y += 2;
             doc.setDrawColor(185, 28, 28);
             doc.line(14, y-2, 196, y-2);
             doc.setFont(undefined, "bold");
@@ -747,7 +670,7 @@
                 }
             }
             
-            // BANKING DETAILS - ONLY ON QUOTATION MODE
+            // BANKING DETAILS - ONLY ON QUOTATION MODE (NOT ON INVOICE)
             if (mode === "quotation") {
                 let bankY = doc.internal.pageSize.height - 35;
                 doc.setFontSize(7);
@@ -758,12 +681,12 @@
                 doc.text("Account Number: 1341809366 | PayShap: 0836813973@nedbank", 15, bankY+8);
             }
             
-            // PAID STAMP
+            // PAID STAMP - appears when paidEnabled is true (only on invoice mode)
             if (mode === "invoice" && paidEnabled) {
                 let paidY = doc.internal.pageSize.height - 22;
                 if (paidLoaded && paidImgData) {
                     try {
-                        doc.addImage(paidImgData, 'PNG', 15, paidY-12, 22, 10);
+                        doc.addImage(paidImgData, 'PNG', 15, paidY-12, 22, 12);
                     } catch(e) {
                         doc.setFontSize(9);
                         doc.setTextColor(40, 160, 60);
@@ -782,28 +705,14 @@
             doc.setTextColor(120, 120, 120);
             doc.text("HOZ Auto Electrical & Diagnostics · Thank you !", 15, footerY);
             
+            // Save PDF
             const pdfBlob = doc.output("blob");
-            const fileName = invoiceRef + ".pdf";
-            
-            // Auto Download
+            const fileName = `${invoiceRef}.pdf`;
             const pdfUrl = URL.createObjectURL(pdfBlob);
             const a = document.createElement("a");
             a.href = pdfUrl;
             a.download = fileName;
             a.click();
-            
-            // Share file using native Web Share API
-            const file = new File([pdfBlob], fileName, { type: "application/pdf" });
-            
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                navigator.share({
-                    title: mode === "invoice" ? "Invoice" : "Quotation",
-                    text: `Document from HOZ AUTO ELECTRICAL - ${client}`,
-                    files: [file]
-                }).catch((err) => {
-                    console.log("Share cancelled or failed:", err);
-                });
-            }
             
             setTimeout(() => {
                 URL.revokeObjectURL(pdfUrl);
@@ -812,13 +721,11 @@
         }, 100);
     }
     
-    // Initialize with one empty task
-    function initialize() {
-        setMode("invoice");
-        addTask();
-    }
-    
-    initialize();
+    setMode("invoice");
 </script>
 </body>
 </html>
+
+
+
+make it to send the generated document as a pdf
