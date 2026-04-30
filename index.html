@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <title>Hoz Auto Electrical · Repair Invoice & Receipt</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
@@ -19,7 +17,7 @@
             background: #0a0a0a;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             padding: 20px;
         }
@@ -42,13 +40,8 @@
             margin-bottom: 0.25rem;
         }
 
-        h1 span:first-child {
-            color: #f5b042;
-        }
-
-        h1 span:last-child {
-            color: #b91c1c;
-        }
+        h1 span:first-child { color: #f5b042; }
+        h1 span:last-child { color: #b91c1c; }
 
         .subtitle {
             text-align: center;
@@ -100,13 +93,11 @@
             justify-content: center;
             align-items: center;
             gap: 12px;
-            margin: 10px 0 20px;
+            margin: 10px auto 20px;
             padding: 5px 15px;
             background: #1a1a1a;
             border-radius: 50px;
             width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .toggle-switch {
@@ -192,15 +183,6 @@
             color: #5a5a5a;
         }
 
-        .task-price-input {
-            color: white;
-        }
-
-        .task-price-input::placeholder {
-            color: #6a6a6a;
-            font-style: italic;
-        }
-
         .section-title {
             grid-column: span 2;
             font-weight: 700;
@@ -268,7 +250,7 @@
         }
 
         .task-price {
-            width: 110px;
+            width: 140px;
         }
 
         .task-price input {
@@ -427,7 +409,6 @@
     </div>
 
     <div class="form-grid">
-
         <div class="field-group">
             <label>👤 CLIENT NAME</label>
             <input type="text" id="clientName" placeholder="Enter client name">
@@ -461,7 +442,6 @@
                 <label>🔧 ADDITIONAL TASKS / REPAIRS</label>
                 <button type="button" class="add-task-btn" onclick="addTask()">+ ADD TASK</button>
             </div>
-
             <div id="tasksContainer"></div>
         </div>
 
@@ -513,8 +493,15 @@
 
     let logoLoaded = false;
     let paidLoaded = false;
+
     let logoImgData = null;
     let paidImgData = null;
+
+    let logoOriginalWidth = 0;
+    let logoOriginalHeight = 0;
+
+    let paidOriginalWidth = 0;
+    let paidOriginalHeight = 0;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
@@ -523,67 +510,59 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    function cropToSquareAndResize(imgElement, targetSize = 70) {
+    function imageToDataURLOriginal(imgElement) {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        const minDim = Math.min(imgElement.width, imgElement.height);
-        const cropX = (imgElement.width - minDim) / 2;
-        const cropY = (imgElement.height - minDim) / 2;
+        canvas.width = imgElement.naturalWidth || imgElement.width;
+        canvas.height = imgElement.naturalHeight || imgElement.height;
 
-        canvas.width = targetSize;
-        canvas.height = targetSize;
+        ctx.drawImage(imgElement, 0, 0);
 
-        ctx.drawImage(
-            imgElement,
-            cropX,
-            cropY,
-            minDim,
-            minDim,
-            0,
-            0,
-            targetSize,
-            targetSize
-        );
+        return canvas.toDataURL("image/png");
+    }
 
-        return canvas.toDataURL("image/png", 0.8);
+    function getDisplaySizeFromPixels(pixelWidth, pixelHeight, maxWidthMM, maxHeightMM) {
+        let widthMM = pixelWidth * 0.264583;
+        let heightMM = pixelHeight * 0.264583;
+
+        const widthRatio = maxWidthMM / widthMM;
+        const heightRatio = maxHeightMM / heightMM;
+        const ratio = Math.min(widthRatio, heightRatio, 1);
+
+        widthMM = widthMM * ratio;
+        heightMM = heightMM * ratio;
+
+        return {
+            width: widthMM,
+            height: heightMM
+        };
     }
 
     const logoImg = new Image();
 
     logoImg.onload = function () {
         logoLoaded = true;
-        logoImgData = cropToSquareAndResize(logoImg, 70);
+
+        logoOriginalWidth = logoImg.naturalWidth || logoImg.width;
+        logoOriginalHeight = logoImg.naturalHeight || logoImg.height;
+
+        logoImgData = imageToDataURLOriginal(logoImg);
 
         imageStatus.innerHTML =
-            "✅ Logo loaded successfully | " +
-            (paidLoaded ? "✅ Paid stamp loaded" : "⏳ Loading paid stamp...");
+            "✅ Logo loaded in original quality | " +
+            (paidLoaded ? "✅ Paid stamp loaded in original quality" : "⏳ Loading paid stamp...");
 
         imageStatus.style.color = "#88ff88";
     };
 
     logoImg.onerror = function () {
-        logoLoaded = true;
-
-        const canvas = document.createElement("canvas");
-        canvas.width = 70;
-        canvas.height = 70;
-
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#b91c1c";
-        ctx.fillRect(0, 0, 70, 70);
-
-        ctx.fillStyle = "#f5b042";
-        ctx.font = "bold 28px system-ui";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("HA", 35, 38);
-
-        logoImgData = canvas.toDataURL("image/png");
+        logoLoaded = false;
+        logoImgData = null;
 
         imageStatus.innerHTML =
-            "⚠️ logo.png not found, using text logo | " +
-            (paidLoaded ? "✅ Paid stamp loaded" : "⏳ Loading paid stamp...");
+            "⚠️ logo.png not found in assets folder | " +
+            (paidLoaded ? "✅ Paid stamp loaded in original quality" : "⏳ Loading paid stamp...");
 
         imageStatus.style.color = "#ff8888";
     };
@@ -595,45 +574,25 @@
     paidImg.onload = function () {
         paidLoaded = true;
 
-        const canvas = document.createElement("canvas");
+        paidOriginalWidth = paidImg.naturalWidth || paidImg.width;
+        paidOriginalHeight = paidImg.naturalHeight || paidImg.height;
 
-        let width = paidImg.width;
-        let height = paidImg.height;
-
-        const maxW = 80;
-        const maxH = 35;
-
-        if (width > maxW) {
-            height = (height * maxW) / width;
-            width = maxW;
-        }
-
-        if (height > maxH) {
-            width = (width * maxH) / height;
-            height = maxH;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(paidImg, 0, 0, width, height);
-
-        paidImgData = canvas.toDataURL("image/png", 0.7);
+        paidImgData = imageToDataURLOriginal(paidImg);
 
         imageStatus.innerHTML =
-            (logoLoaded ? "✅ Logo loaded" : "⚠️ Logo missing") +
-            " | ✅ Paid stamp loaded";
+            (logoLoaded ? "✅ Logo loaded in original quality" : "⚠️ logo.png missing") +
+            " | ✅ Paid stamp loaded in original quality";
 
         imageStatus.style.color = "#88ff88";
     };
 
     paidImg.onerror = function () {
         paidLoaded = false;
+        paidImgData = null;
 
         imageStatus.innerHTML =
-            (logoLoaded ? "✅ Logo loaded" : "⚠️ Logo missing") +
-            " | ⚠️ paid.png not found";
+            (logoLoaded ? "✅ Logo loaded in original quality" : "⚠️ logo.png missing") +
+            " | ⚠️ paid.png not found in assets folder";
 
         imageStatus.style.color = "#ff8888";
     };
@@ -763,8 +722,7 @@
             const doc = new jsPDF({
                 orientation: "portrait",
                 unit: "mm",
-                format: "a4",
-                compress: true
+                format: "a4"
             });
 
             let y = 18;
@@ -790,15 +748,32 @@
 
             const today = new Date().toLocaleDateString("en-ZA");
 
-            if (logoImgData) {
+            let headerX = 15;
+
+            if (logoImgData && logoOriginalWidth > 0 && logoOriginalHeight > 0) {
                 try {
-                    doc.addImage(logoImgData, "PNG", 15, 4, 25, 25);
+                    const logoSize = getDisplaySizeFromPixels(
+                        logoOriginalWidth,
+                        logoOriginalHeight,
+                        45,
+                        30
+                    );
+
+                    doc.addImage(
+                        logoImgData,
+                        "PNG",
+                        15,
+                        4,
+                        logoSize.width,
+                        logoSize.height
+                    );
+
+                    headerX = 15 + logoSize.width + 8;
                 } catch (e) {
                     console.log("Logo add error:", e);
+                    headerX = 15;
                 }
             }
-
-            const headerX = logoImgData ? 48 : 15;
 
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
@@ -979,20 +954,34 @@
             }
 
             if (mode === "invoice" && paidEnabled) {
-                const paidY = doc.internal.pageSize.height - 22;
+                const paidY = doc.internal.pageSize.height - 30;
 
-                if (paidLoaded && paidImgData) {
+                if (paidLoaded && paidImgData && paidOriginalWidth > 0 && paidOriginalHeight > 0) {
                     try {
-                        doc.addImage(paidImgData, "PNG", 15, paidY - 12, 22, 10);
+                        const paidSize = getDisplaySizeFromPixels(
+                            paidOriginalWidth,
+                            paidOriginalHeight,
+                            45,
+                            25
+                        );
+
+                        doc.addImage(
+                            paidImgData,
+                            "PNG",
+                            15,
+                            paidY,
+                            paidSize.width,
+                            paidSize.height
+                        );
                     } catch (e) {
                         doc.setFontSize(9);
                         doc.setTextColor(40, 160, 60);
-                        doc.text("✓ PAID", 18, paidY - 4);
+                        doc.text("✓ PAID", 18, paidY + 8);
                     }
                 } else {
                     doc.setFontSize(9);
                     doc.setTextColor(40, 160, 60);
-                    doc.text("✓ PAID", 18, paidY - 4);
+                    doc.text("✓ PAID", 18, paidY + 8);
                 }
             }
 
