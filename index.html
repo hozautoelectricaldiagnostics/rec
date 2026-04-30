@@ -429,12 +429,13 @@
     let paidEnabled = false;
     let taskCounter = 0;
     
-    // Pre-load images with proper error handling - preserve original quality
+    // Pre-load images with proper error handling - NO CROPPING, preserve original aspect ratio
     let logoLoaded = false;
     let paidLoaded = false;
     let logoImgData = null;
     let paidImgData = null;
-    let logoWidth = 0, logoHeight = 0;
+    let logoWidth = 0;
+    let logoHeight = 0;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
@@ -443,20 +444,28 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    // Load logo.png - preserve original sharpness
+    // Load logo.png - preserve original dimensions
     const logoImg = new Image();
     logoImg.crossOrigin = "Anonymous";
     logoImg.onload = function() {
         logoLoaded = true;
         logoWidth = logoImg.width;
         logoHeight = logoImg.height;
-        // Use canvas to preserve quality exactly as original
+        // Calculate display size while preserving aspect ratio
         const canvas = document.createElement('canvas');
-        canvas.width = logoWidth;
-        canvas.height = logoHeight;
+        let displayWidth = logoImg.width;
+        let displayHeight = logoImg.height;
+        // Max dimensions for PDF (approx 25mm width max)
+        if (displayWidth > 100) {
+            const ratio = displayHeight / displayWidth;
+            displayWidth = 100;
+            displayHeight = displayWidth * ratio;
+        }
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(logoImg, 0, 0, logoWidth, logoHeight);
-        logoImgData = canvas.toDataURL('image/png', 1.0);
+        ctx.drawImage(logoImg, 0, 0, displayWidth, displayHeight);
+        logoImgData = canvas.toDataURL('image/png', 0.9);
         imageStatus.innerHTML = '✅ Logo loaded | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#88ff88';
     };
@@ -467,12 +476,13 @@
     };
     logoImg.src = "assets/logo.png?" + Date.now();
 
-    // Load paid.png - preserve quality
+    // Load paid.png - preserve original aspect ratio
     const paidImg = new Image();
     paidImg.crossOrigin = "Anonymous";
     paidImg.onload = function() {
         paidLoaded = true;
         const canvas = document.createElement('canvas');
+        // Keep original aspect ratio
         let width = paidImg.width;
         let height = paidImg.height;
         let maxW = 80;
@@ -491,7 +501,7 @@
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(paidImg, 0, 0, width, height);
-        paidImgData = canvas.toDataURL('image/png', 0.9);
+        paidImgData = canvas.toDataURL('image/png', 0.8);
         imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
         imageStatus.style.color = '#88ff88';
     };
@@ -554,13 +564,16 @@
         document.querySelectorAll(".task-item").forEach(item => {
             const desc = item.querySelector(".task-desc-input")?.value || "";
             const priceInput = item.querySelector(".task-price-input")?.value;
-            let price = 0;
+            let price = null;
             if (priceInput !== null && priceInput !== undefined && priceInput !== "") {
                 price = parseFloat(priceInput);
-                if (isNaN(price)) price = 0;
+                if (isNaN(price)) price = null;
             }
-            if (desc.trim() !== "" || price > 0) {
-                tasks.push({ description: desc.trim() || "Unnamed task", amount: price });
+            if (desc.trim() !== "" || (price !== null && price > 0)) {
+                tasks.push({ 
+                    description: desc.trim() || "Unnamed task", 
+                    amount: (price !== null && price > 0) ? price : 0
+                });
             }
         });
         return tasks;
@@ -596,18 +609,13 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // LOGO - preserve aspect ratio, no cropping, sharp rendering
+            // LOGO - Original size preserved (25mm width, auto height to maintain aspect ratio)
             if (logoLoaded && logoImgData) {
                 try {
-                    // Calculate display size maintaining aspect ratio
-                    const maxLogoWidthMm = 28;
-                    const aspectRatio = logoHeight / logoWidth;
-                    let logoWidthMm = maxLogoWidthMm;
-                    let logoHeightMm = maxLogoWidthMm * aspectRatio;
-                    if (logoHeightMm > 28) {
-                        logoHeightMm = 28;
-                        logoWidthMm = 28 / aspectRatio;
-                    }
+                    // Calculate height to preserve aspect ratio (approx 25mm width)
+                    const logoAspectRatio = logoHeight / logoWidth;
+                    const logoWidthMm = 25;
+                    const logoHeightMm = logoWidthMm * logoAspectRatio;
                     doc.addImage(logoImgData, 'PNG', 15, 5, logoWidthMm, logoHeightMm);
                 } catch(e) {
                     console.log("Logo add error:", e);
