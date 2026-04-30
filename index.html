@@ -2,146 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Hoz Auto Electrical · Liquid Glass Invoice System</title>
+    <title>Hoz Auto Electrical · Repair Invoice & Receipt</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, 'Inter', sans-serif;
+            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
-
         body {
-            min-height: 100vh;
-            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+            background: #0a0a0a;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px;
-            position: relative;
+            min-height: 100vh;
+            padding: 20px;
         }
-
-        /* Liquid Glass Morphism Effect */
-        .glass-card {
-            background: rgba(15, 20, 30, 0.55);
-            backdrop-filter: blur(14px) saturate(180%);
-            -webkit-backdrop-filter: blur(14px);
-            border-radius: 48px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-
         .card {
             width: 100%;
-            max-width: 1100px;
-            padding: 1.8rem 2rem;
+            max-width: 1000px;
+            background: #111111;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(185,28,28,0.3);
+            padding: 1.8rem;
+            border: 1px solid #b91c1c33;
         }
-
         h1 {
-            font-size: 2.1rem;
+            font-size: 1.9rem;
             font-weight: 800;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.5px;
             text-align: center;
-            background: linear-gradient(135deg, #f5b042 0%, #e69a2e 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 0.25rem;
         }
-
-        h1 span:last-child {
-            background: linear-gradient(135deg, #e33535, #b91c1c);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
+        h1 span:first-child { color: #f5b042; }
+        h1 span:last-child { color: #b91c1c; }
         .subtitle {
             text-align: center;
-            color: rgba(220, 220, 255, 0.75);
-            margin-bottom: 6px;
-            font-size: 0.75rem;
-            letter-spacing: 1.5px;
-            font-weight: 400;
-            backdrop-filter: blur(2px);
+            color: #b0b0b0;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
         }
-
         .mode-bar {
             display: flex;
-            gap: 1rem;
+            gap: 0.8rem;
             justify-content: center;
-            margin: 1.2rem 0 0.5rem;
+            margin: 1rem 0 0.5rem;
         }
-
         .mode-btn {
-            background: rgba(30, 35, 45, 0.7);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(245, 176, 66, 0.4);
-            padding: 0.5rem 2rem;
-            border-radius: 60px;
+            background: #1f1f1f;
+            border: 1px solid #333;
+            padding: 0.5rem 1.8rem;
+            border-radius: 40px;
             font-size: 0.9rem;
             font-weight: 600;
-            color: #e0e0e0;
+            color: #ccc;
             cursor: pointer;
-            transition: all 0.25s;
+            transition: 0.2s;
         }
-
         .mode-btn.active {
             background: #b91c1c;
             border-color: #f5b042;
             color: white;
-            box-shadow: 0 0 12px rgba(185, 28, 28, 0.5);
         }
-
         .doc-badge {
             text-align: center;
-            font-size: 0.85rem;
-            margin: 10px auto;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            padding: 5px 28px;
+            font-size: 0.9rem;
+            margin: 8px auto;
+            background: #1e1e1e;
+            padding: 5px 25px;
             border-radius: 40px;
             display: inline-block;
             color: #f5b042;
             width: auto;
-            font-weight: 600;
-            border: 0.5px solid rgba(245, 176, 66, 0.5);
         }
-
         .paid-toggle-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 14px;
-            margin: 10px auto 20px;
-            padding: 8px 24px;
-            background: rgba(25, 30, 40, 0.6);
-            backdrop-filter: blur(8px);
-            border-radius: 60px;
+            gap: 12px;
+            margin: 10px 0 20px;
+            padding: 5px 15px;
+            background: #1a1a1a;
+            border-radius: 50px;
             width: fit-content;
-            border: 1px solid rgba(255,255,240,0.15);
+            margin-left: auto;
+            margin-right: auto;
         }
-
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 52px;
+            width: 50px;
             height: 26px;
-            background: #2c2f36;
+            background: #333;
             border-radius: 30px;
-            cursor: pointer;
+            border: 1px solid #555;
             transition: 0.2s;
-            border: 1px solid #f5b04280;
+            cursor: pointer;
         }
-
         .toggle-switch.active {
             background: #b91c1c;
             border-color: #f5b042;
         }
-
         .toggle-slider {
             position: absolute;
             height: 22px;
@@ -152,224 +115,241 @@
             left: 2px;
             transition: 0.2s;
         }
-
         .toggle-switch.active .toggle-slider {
-            left: 28px;
+            left: 26px;
         }
-
         .paid-label {
             font-weight: 600;
             color: #f5b042;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
-
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.2rem 1.8rem;
+            gap: 1rem 1.5rem;
         }
-
         .field-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
-
         .field-group label {
-            font-weight: 700;
+            font-weight: 600;
             color: #f5b042;
-            font-size: 0.7rem;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
         }
-
         input, select, textarea {
-            padding: 10px 14px;
-            background: rgba(20, 25, 35, 0.8);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 16px;
             font-size: 0.85rem;
             width: 100%;
-            color: #f0f0f0;
+            color: white;
             transition: 0.2s;
         }
-
+        textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #f5b042;
-            box-shadow: 0 0 0 3px rgba(245, 176, 66, 0.25);
-            background: rgba(25, 30, 42, 0.95);
+            box-shadow: 0 0 0 2px rgba(245,176,66,0.2);
         }
-
+        input::placeholder, textarea::placeholder {
+            color: #5a5a5a;
+        }
+        .task-price-input {
+            color: white;
+        }
+        .task-price-input::placeholder {
+            color: #6a6a6a;
+            font-style: italic;
+        }
         .section-title {
             grid-column: span 2;
-            font-weight: 800;
-            color: #e63535;
-            margin-top: 12px;
-            border-bottom: 2px solid rgba(185, 28, 28, 0.5);
-            padding-bottom: 6px;
+            font-weight: 700;
+            color: #b91c1c;
+            margin-top: 8px;
+            border-bottom: 2px solid #b91c1c55;
+            padding-bottom: 5px;
             font-size: 1rem;
-            letter-spacing: -0.2px;
         }
-
         .repair-task-row {
             grid-column: span 2;
-            background: rgba(10, 14, 22, 0.6);
-            backdrop-filter: blur(12px);
-            padding: 14px;
-            border-radius: 28px;
-            border: 1px solid rgba(245, 176, 66, 0.25);
+            background: #0c0c0c;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid #2a2a2a;
         }
-
         .task-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             flex-wrap: wrap;
             gap: 10px;
         }
-
+        .task-header label {
+            font-weight: 700;
+            color: #f5b042;
+            font-size: 0.85rem;
+        }
         .add-task-btn {
             background: #b91c1c;
             border: none;
             color: white;
-            padding: 6px 18px;
-            border-radius: 40px;
+            padding: 5px 12px;
+            border-radius: 30px;
             cursor: pointer;
             font-size: 0.7rem;
             font-weight: bold;
-            transition: 0.2s;
         }
-
         .task-item {
-            background: rgba(0, 0, 0, 0.4);
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 24px;
+            background: #151515;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border-radius: 14px;
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
-            border: 0.5px solid rgba(255,255,200,0.1);
         }
-
         .task-desc {
             flex: 3;
-            min-width: 160px;
+            min-width: 150px;
         }
-
+        .task-desc input {
+            background: #252525;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
         .task-price {
-            width: 120px;
+            width: 110px;
         }
-
+        .task-price input {
+            background: #252525;
+            padding: 6px 10px;
+        }
         .remove-task {
-            background: #4a2020;
+            background: #3a1a1a;
             border: none;
-            color: #ffaeae;
+            color: #ff8888;
             cursor: pointer;
-            padding: 5px 14px;
-            border-radius: 30px;
+            padding: 5px 10px;
+            border-radius: 20px;
             font-size: 0.7rem;
         }
-
         .default-task-toggle {
-            background: rgba(20, 25, 35, 0.7);
-            backdrop-filter: blur(6px);
-            border-radius: 24px;
-            padding: 12px 16px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 10px 12px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 12px;
             flex-wrap: wrap;
-            border: 1px solid rgba(245, 176, 66, 0.3);
-            grid-column: span 2;
+            border: 1px solid #2a2a2a;
         }
-
+        .default-task-toggle label {
+            color: #f5b042;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .default-task-toggle input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #b91c1c;
+        }
+        .default-task-price {
+            color: #b0b0b0;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+        .generate-btn {
+            grid-column: span 2;
+            background: #b91c1c;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 60px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .generate-btn:hover {
+            background: #8b1515;
+            transform: scale(1.01);
+        }
+        .note {
+            grid-column: span 2;
+            font-size: 0.7rem;
+            color: #888;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .image-note {
+            grid-column: span 2;
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 8px 12px;
+            font-size: 0.7rem;
+            color: #ff8888;
+            text-align: center;
+            margin-top: 5px;
+        }
         .extra-charges-grid {
             grid-column: span 2;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
         }
-
-        .generate-btn {
-            grid-column: span 2;
-            background: linear-gradient(95deg, #b91c1c, #9a1515);
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 800;
-            border-radius: 60px;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 15px rgba(185, 28, 28, 0.4);
-        }
-
-        .generate-btn:hover {
-            transform: scale(1.01);
-            background: #a01818;
-            box-shadow: 0 6px 18px rgba(185, 28, 28, 0.6);
-        }
-
-        .note {
-            grid-column: span 2;
-            font-size: 0.7rem;
-            color: #aaaacc;
-            text-align: center;
-            margin-top: 12px;
-        }
-
-        .image-note {
-            grid-column: span 2;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(4px);
-            border-radius: 60px;
-            padding: 8px 16px;
-            font-size: 0.7rem;
-            color: #ffbc6e;
-            text-align: center;
-        }
-
         @media (max-width: 760px) {
-            .form-grid, .extra-charges-grid {
+            .form-grid {
                 grid-template-columns: 1fr;
             }
-            .section-title, .repair-task-row, .default-task-toggle, .extra-charges-grid {
+            .section-title, .repair-task-row, .generate-btn, .note, .image-note, .extra-charges-grid {
                 grid-column: span 1;
             }
-            .card {
-                padding: 1.2rem;
+            .extra-charges-grid {
+                grid-template-columns: 1fr;
             }
         }
-
+        hr {
+            border-color: #b91c1c33;
+            margin: 8px 0;
+        }
         .loading {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: #b91c1c;
-            backdrop-filter: blur(20px);
             color: white;
-            padding: 16px 36px;
-            border-radius: 60px;
+            padding: 20px 40px;
+            border-radius: 10px;
             z-index: 9999;
             display: none;
             font-weight: bold;
-            box-shadow: 0 8px 24px black;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
-<div class="loading" id="loadingIndicator">✨ Generating Crystal PDF ...</div>
+<div class="loading" id="loadingIndicator">📄 Generating PDF ...</div>
 
-<div class="glass-card card">
+<div class="card">
     <h1><span>HOZ</span> <span>AUTO</span></h1>
-    <div class="subtitle">ELECTRICAL & DIAGNOSTICS · LIQUID INTERFACE</div>
+    <div class="subtitle">ELECTRICAL & DIAGNOSTICS · REPAIR INVOICE</div>
 
     <div class="mode-bar">
         <button class="mode-btn" id="invoiceModeBtn" onclick="setMode('invoice')">📄 INVOICE</button>
@@ -380,7 +360,7 @@
         <span class="doc-badge" id="documentType">INVOICE</span>
     </div>
 
-    <div id="paidToggleArea" class="paid-toggle-container">
+    <div id="paidToggleArea" class="paid-toggle-container" style="display: flex;">
         <span class="paid-label">✓ MARK AS PAID</span>
         <div id="toggleSwitch" class="toggle-switch" onclick="togglePaid()">
             <div class="toggle-slider"></div>
@@ -388,24 +368,44 @@
     </div>
 
     <div class="form-grid">
-        <div class="field-group"><label>👤 CLIENT NAME</label><input type="text" id="clientName" placeholder="Full name"></div>
-        <div class="field-group"><label>🚗 VEHICLE REGISTRATION</label><input type="text" id="vehicleReg" placeholder="GP 01 XY"></div>
-        <div class="field-group"><label>🏭 MAKE & MODEL</label><input type="text" id="carModel" placeholder="BMW 330i, Hilux"></div>
-        <div class="field-group"><label>📞 CONTACT NUMBER</label><input type="text" id="contactNum" placeholder="078 123 4567"></div>
+        <div class="field-group">
+            <label>👤 CLIENT NAME</label>
+            <input type="text" id="clientName" placeholder="Enter client name">
+        </div>
+        <div class="field-group">
+            <label>🚗 VEHICLE REGISTRATION</label>
+            <input type="text" id="vehicleReg" placeholder="e.g. GP 01 XY">
+        </div>
+        <div class="field-group">
+            <label>🏭 CAR MAKE & MODEL</label>
+            <input type="text" id="carModel" placeholder="e.g. BMW 330i, Toyota Hilux">
+        </div>
+        <div class="field-group">
+            <label>📞 CONTACT NUMBER</label>
+            <input type="text" id="contactNum" placeholder="078 123 4567">
+        </div>
 
+        <!-- DEFAULT DIAGNOSTIC TASK WITH CHECKBOX -->
         <div class="default-task-toggle">
-            <label><input type="checkbox" id="defaultDiagnosticToggle"> 🔍 Diagnostic & Fault Code Clearing</label>
+            <label>
+                <input type="checkbox" id="defaultDiagnosticToggle">
+                🔍 Diagnostic & Fault Code Clearing
+            </label>
             <span class="default-task-price">R 300.00</span>
         </div>
 
+        <!-- DYNAMIC TASKS SECTION -->
         <div class="repair-task-row">
             <div class="task-header">
                 <label>🔧 ADDITIONAL TASKS / REPAIRS</label>
                 <button type="button" class="add-task-btn" onclick="addTask()">+ ADD TASK</button>
             </div>
-            <div id="tasksContainer"></div>
+            <div id="tasksContainer">
+                <!-- Empty by default -->
+            </div>
         </div>
 
+        <!-- EXTRA CHARGES & ADJUSTMENTS -->
         <div class="section-title">💰 EXTRA CHARGES & ADJUSTMENTS</div>
         <div class="extra-charges-grid">
             <div class="field-group"><label>🔧 LABOUR (R)</label><input type="number" id="labourCharges" min="0" step="0.01" placeholder="0.00"></div>
@@ -415,9 +415,12 @@
             <div class="field-group"><label>🏦 AMOUNT RECEIVED</label><input type="number" id="amountPaid" min="0" step="0.01" placeholder="0.00"></div>
         </div>
 
-        <div class="image-note" id="imageStatus">🌀 Loading assets with crisp rendering ...</div>
-        <button class="generate-btn" onclick="generatePDF()">✨ GENERATE & SEND ✨</button>
-        <div class="note">⚡ HOZ AUTO ELECTRICAL · Precision Diagnostics · Liquid Glass Interface</div>
+        <div class="image-note" id="imageStatus">
+            🔄 Checking images in "assets" folder...
+        </div>
+
+        <button class="generate-btn" onclick="generatePDF()">📄 GENERATE INVOICE / RECEIPT</button>
+        <div class="note">⚡ HOZ AUTO ELECTRICAL · Precision Diagnostics & Repair · Powered by expertise.</div>
     </div>
 </div>
 
@@ -426,12 +429,12 @@
     let paidEnabled = false;
     let taskCounter = 0;
     
-    // Image assets with HIGH QUALITY rendering (no blur, proper scaling)
+    // Pre-load images with proper error handling - preserve original quality
     let logoLoaded = false;
     let paidLoaded = false;
     let logoImgData = null;
     let paidImgData = null;
-    let logoNaturalWidth = 0, logoNaturalHeight = 0;
+    let logoWidth = 0, logoHeight = 0;
 
     const docTypeSpan = document.getElementById("documentType");
     const invoiceBtn = document.getElementById("invoiceModeBtn");
@@ -440,71 +443,62 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    // HIGH QUALITY logo loader - preserve exact sharpness
+    // Load logo.png - preserve original sharpness
     const logoImg = new Image();
     logoImg.crossOrigin = "Anonymous";
     logoImg.onload = function() {
         logoLoaded = true;
-        logoNaturalWidth = logoImg.naturalWidth;
-        logoNaturalHeight = logoImg.naturalHeight;
-        
-        // Create canvas at original size to avoid quality loss
+        logoWidth = logoImg.width;
+        logoHeight = logoImg.height;
+        // Use canvas to preserve quality exactly as original
         const canvas = document.createElement('canvas');
-        canvas.width = logoNaturalWidth;
-        canvas.height = logoNaturalHeight;
+        canvas.width = logoWidth;
+        canvas.height = logoHeight;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(logoImg, 0, 0, logoNaturalWidth, logoNaturalHeight);
-        // Use high quality PNG
+        ctx.drawImage(logoImg, 0, 0, logoWidth, logoHeight);
         logoImgData = canvas.toDataURL('image/png', 1.0);
-        
-        imageStatus.innerHTML = '✅ Crisp Logo Ready | ' + (paidLoaded ? '✅ Paid stamp ready' : '⏳ Loading paid stamp...');
-        imageStatus.style.color = '#bbffaa';
+        imageStatus.innerHTML = '✅ Logo loaded | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        imageStatus.style.color = '#88ff88';
     };
     logoImg.onerror = function() {
         logoLoaded = false;
-        imageStatus.innerHTML = '⚠️ logo.png missing (using text fallback) | ' + (paidLoaded ? '✅ Paid stamp ready' : '⏳ Loading paid...');
-        imageStatus.style.color = '#ffaa88';
-        // create sharp text fallback
-        const canvas = document.createElement('canvas');
-        canvas.width = 200;
-        canvas.height = 200;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#b91c1c';
-        ctx.fillRect(0, 0, 200, 200);
-        ctx.fillStyle = '#f5b042';
-        ctx.font = 'bold 72px "Segoe UI"';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('HA', 100, 105);
-        logoImgData = canvas.toDataURL('image/png');
-        logoLoaded = true;
+        imageStatus.innerHTML = '⚠️ logo.png not found in assets folder | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        imageStatus.style.color = '#ff8888';
     };
     logoImg.src = "assets/logo.png?" + Date.now();
 
-    // Paid stamp high quality
+    // Load paid.png - preserve quality
     const paidImg = new Image();
     paidImg.crossOrigin = "Anonymous";
     paidImg.onload = function() {
         paidLoaded = true;
         const canvas = document.createElement('canvas');
-        let w = paidImg.width;
-        let h = paidImg.height;
-        const maxW = 180;
-        const maxH = 70;
-        if (w > maxW) { h = (h * maxW) / w; w = maxW; }
-        if (h > maxH) { w = (w * maxH) / h; h = maxH; }
-        canvas.width = w;
-        canvas.height = h;
+        let width = paidImg.width;
+        let height = paidImg.height;
+        let maxW = 80;
+        let maxH = 35;
+        if (width > maxW) {
+            const ratio = height / width;
+            width = maxW;
+            height = width * ratio;
+        }
+        if (height > maxH) {
+            const ratio = width / height;
+            height = maxH;
+            width = height * ratio;
+        }
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(paidImg, 0, 0, w, h);
-        paidImgData = canvas.toDataURL('image/png', 0.95);
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo crisp' : '⚠️ logo missing') + ' | ✅ Paid stamp HD';
-        imageStatus.style.color = '#bbffaa';
+        ctx.drawImage(paidImg, 0, 0, width, height);
+        paidImgData = canvas.toDataURL('image/png', 0.9);
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
+        imageStatus.style.color = '#88ff88';
     };
     paidImg.onerror = function() {
         paidLoaded = false;
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo crisp' : '⚠️ logo missing') + ' | ⚠️ paid.png missing (text stamp)';
-        imageStatus.style.color = '#ffaa88';
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ⚠️ paid.png not found in assets folder';
+        imageStatus.style.color = '#ff8888';
     };
     paidImg.src = "assets/paid.png?" + Date.now();
 
@@ -538,8 +532,8 @@
         taskDiv.className = "task-item";
         taskDiv.setAttribute("data-id", taskCounter);
         taskDiv.innerHTML = `
-            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="Description (e.g., Starter repair)" value=""></div>
-            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R)" step="0.01" value=""></div>
+            <div class="task-desc"><input type="text" class="task-desc-input" placeholder="e.g., Alternator repair, Battery replacement" value=""></div>
+            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R) - leave empty for no charge" step="0.01" value=""></div>
             <button class="remove-task" onclick="removeTask(this)">✖</button>
         `;
         container.appendChild(taskDiv);
@@ -547,33 +541,41 @@
     }
 
     function removeTask(btn) {
-        btn.closest(".task-item").remove();
+        const taskItem = btn.closest(".task-item");
+        taskItem.remove();
     }
 
     function getTasks() {
         const tasks = [];
-        if (document.getElementById("defaultDiagnosticToggle")?.checked) {
+        const isDiagnosticChecked = document.getElementById("defaultDiagnosticToggle")?.checked || false;
+        if (isDiagnosticChecked) {
             tasks.push({ description: "Diagnostic & Fault Code Clearing", amount: 300 });
         }
         document.querySelectorAll(".task-item").forEach(item => {
-            const desc = item.querySelector(".task-desc-input")?.value.trim() || "";
-            const priceVal = item.querySelector(".task-price-input")?.value;
-            let price = (priceVal && priceVal !== "") ? parseFloat(priceVal) : 0;
-            if (isNaN(price)) price = 0;
-            if (desc !== "" || price > 0) {
-                tasks.push({ description: desc || "Service", amount: price });
+            const desc = item.querySelector(".task-desc-input")?.value || "";
+            const priceInput = item.querySelector(".task-price-input")?.value;
+            let price = 0;
+            if (priceInput !== null && priceInput !== undefined && priceInput !== "") {
+                price = parseFloat(priceInput);
+                if (isNaN(price)) price = 0;
+            }
+            if (desc.trim() !== "" || price > 0) {
+                tasks.push({ description: desc.trim() || "Unnamed task", amount: price });
             }
         });
         return tasks;
     }
 
     function getNextDocumentNumber() {
-        let key = mode === "invoice" ? "HOZ_invoiceCounter" : "HOZ_quotationCounter";
-        let last = parseInt(localStorage.getItem(key));
-        if (isNaN(last) || last < 70) last = 70;
-        else last += 1;
-        localStorage.setItem(key, last);
-        return String(last).padStart(3, "0");
+        let storageKey = mode === "invoice" ? "HOZ_invoiceCounter" : "HOZ_quotationCounter";
+        let lastNumber = parseInt(localStorage.getItem(storageKey));
+        if (isNaN(lastNumber) || lastNumber < 70) {
+            lastNumber = 70;
+        } else {
+            lastNumber += 1;
+        }
+        localStorage.setItem(storageKey, lastNumber);
+        return String(lastNumber).padStart(3, "0");
     }
 
     function generatePDF() {
@@ -584,146 +586,224 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
             
-            let y = 20;
+            let y = 18;
             const client = document.getElementById("clientName").value || "Walk-in Client";
-            const reg = document.getElementById("vehicleReg").value || "N/A";
-            const car = document.getElementById("carModel").value || "Not specified";
+            const vehicleReg = document.getElementById("vehicleReg").value || "N/A";
+            const carMakeModel = document.getElementById("carModel").value || "Not specified";
             const contact = document.getElementById("contactNum").value || "-";
+            
             const docNumber = getNextDocumentNumber();
-            const docRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
+            const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // ~~~~~~ HIGH QUALITY LOGO (preserve aspect, no blur) ~~~~~~
+            // LOGO - preserve aspect ratio, no cropping, sharp rendering
             if (logoLoaded && logoImgData) {
                 try {
-                    let logoWidthMm = 28;
-                    let aspect = logoNaturalHeight / logoNaturalWidth;
-                    let logoHeightMm = logoWidthMm * aspect;
-                    if (logoHeightMm > 28) { logoHeightMm = 28; logoWidthMm = 28 / aspect; }
+                    // Calculate display size maintaining aspect ratio
+                    const maxLogoWidthMm = 28;
+                    const aspectRatio = logoHeight / logoWidth;
+                    let logoWidthMm = maxLogoWidthMm;
+                    let logoHeightMm = maxLogoWidthMm * aspectRatio;
+                    if (logoHeightMm > 28) {
+                        logoHeightMm = 28;
+                        logoWidthMm = 28 / aspectRatio;
+                    }
                     doc.addImage(logoImgData, 'PNG', 15, 5, logoWidthMm, logoHeightMm);
-                } catch(e) { console.warn(e); }
+                } catch(e) {
+                    console.log("Logo add error:", e);
+                }
             }
             
-            let headerOffset = (logoLoaded && logoImgData) ? 50 : 15;
+            // Header text (shifted right to accommodate logo)
+            let headerX = logoLoaded ? 48 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
-            doc.setTextColor(25, 25, 30);
-            doc.text("HOZ AUTO ELECTRICAL", headerOffset, 14);
+            doc.setTextColor(0, 0, 0);
+            doc.text("HOZ AUTO ELECTRICAL", headerX, 14);
             doc.setFontSize(8);
-            doc.setTextColor(100, 100, 120);
-            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerOffset, 20);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerX, 20);
             
             doc.setFontSize(12);
             doc.setTextColor(185, 28, 28);
             doc.text(mode === "invoice" ? "INVOICE" : "QUOTATION", 155, 15);
             doc.setFontSize(8);
-            doc.setTextColor(80, 80, 100);
-            doc.text(docRef, 155, 22);
+            doc.setTextColor(100, 100, 100);
+            doc.text(invoiceRef, 155, 22);
             doc.text(`Date: ${today}`, 155, 28);
             
             y = 42;
             doc.setFontSize(8);
             doc.setTextColor(185, 28, 28);
             doc.text("BILL TO:", 15, y);
-            doc.setTextColor(40, 40, 50);
+            doc.setTextColor(0, 0, 0);
             doc.text(client, 15, y+5);
-            doc.text(`Vehicle: ${car}`, 15, y+10);
-            doc.text(`Reg: ${reg} | Contact: ${contact}`, 15, y+15);
+            doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
+            doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
             
             y = 66;
-            doc.setFillColor(245, 245, 250);
-            doc.rect(14, y-3, 182, 6.5, 'F');
+            // Table headers
+            doc.setFillColor(240, 240, 240);
+            doc.rect(14, y-3, 182, 7, 'F');
             doc.setTextColor(185, 28, 28);
             doc.setFont(undefined, "bold");
-            doc.text("DESCRIPTION", 16, y);
-            doc.text("AMOUNT (R)", 160, y);
-            y += 7;
+            doc.text("DESCRIPTION", 16, y+1);
+            doc.text("AMOUNT (R)", 160, y+1);
+            y += 8;
+            
             let subtotal = 0;
             const tasks = getTasks();
             doc.setFont(undefined, "normal");
             doc.setTextColor(0, 0, 0);
             
             tasks.forEach(task => {
-                let descLine = task.description.length > 48 ? task.description.slice(0,45)+"..." : task.description;
-                doc.text(descLine, 16, y);
+                let descText = task.description.length > 48 ? task.description.substring(0, 45) + "..." : task.description;
+                doc.text(descText, 16, y);
                 if (task.amount > 0) {
                     doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                     subtotal += task.amount;
                 } else {
                     doc.text("—", 160, y);
                 }
-                y += 5.2;
+                y += 5.5;
                 if (y > 250) { doc.addPage(); y = 20; }
             });
-            if (tasks.length === 0) { doc.text("-- No tasks added --", 16, y); y+=5; }
             
+            if (tasks.length === 0) {
+                doc.text("-- No tasks added --", 16, y);
+                y += 5.5;
+            }
+            
+            // EXTRA CHARGES - Labour, Parts, Discount, Tip
             const labour = parseFloat(document.getElementById("labourCharges")?.value) || 0;
-            const parts = parseFloat(document.getElementById("extraCharges")?.value) || 0;
+            const extra = parseFloat(document.getElementById("extraCharges")?.value) || 0;
             const discount = parseFloat(document.getElementById("discountAmount")?.value) || 0;
             const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
             
-            if (labour > 0) { doc.text("Labour Charges", 16, y); doc.text(`R ${labour.toFixed(2)}`, 160, y); subtotal += labour; y+=5; }
-            if (parts > 0) { doc.text("Parts", 16, y); doc.text(`R ${parts.toFixed(2)}`, 160, y); subtotal += parts; y+=5; }
-            if (discount > 0) { doc.text("Discount", 16, y); doc.text(`- R ${discount.toFixed(2)}`, 160, y); subtotal -= discount; y+=5; }
-            if (tip > 0) { doc.text("Tip / Gratuity", 16, y); doc.text(`R ${tip.toFixed(2)}`, 160, y); subtotal += tip; y+=5; }
-            
-            const paidAmount = parseFloat(document.getElementById("amountPaid")?.value) || 0;
-            let grandTotal = Math.max(0, subtotal);
-            let balance = Math.max(0, grandTotal - paidAmount);
-            y += 3;
-            doc.line(14, y-1, 196, y-1);
-            doc.setFont(undefined, "bold");
-            doc.setTextColor(185,28,28);
-            doc.text(`TOTAL: R ${grandTotal.toFixed(2)}`, 138, y+3);
-            y += 8;
-            if (mode === "invoice") {
-                doc.text(`Amount Paid: R ${paidAmount.toFixed(2)}`, 138, y);
-                y+=5;
-                doc.text(`Balance Due: R ${balance.toFixed(2)}`, 138, y);
-                y+=7;
-                if (paidEnabled || (paidAmount >= grandTotal && grandTotal>0)) doc.text("✓ PAID IN FULL", 138, y);
-                else if (paidAmount>0 && paidAmount<grandTotal) doc.text("⏳ PARTIAL PAYMENT", 138, y);
+            if (labour > 0) {
+                doc.text("Labour Charges", 16, y);
+                doc.text(`R ${labour.toFixed(2)}`, 160, y);
+                subtotal += labour;
+                y += 5;
+            }
+            if (extra > 0) {
+                doc.text("Parts / Materials", 16, y);
+                doc.text(`R ${extra.toFixed(2)}`, 160, y);
+                subtotal += extra;
+                y += 5;
+            }
+            if (discount > 0) {
+                doc.text("Discount", 16, y);
+                doc.text(`- R ${discount.toFixed(2)}`, 160, y);
+                subtotal -= discount;
+                y += 5;
+            }
+            if (tip > 0) {
+                doc.text("Tip / Gratuity", 16, y);
+                doc.text(`R ${tip.toFixed(2)}`, 160, y);
+                subtotal += tip;
+                y += 5;
             }
             
+            const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
+            let grandTotal = subtotal;
+            let balanceDue = grandTotal - amountPaid;
+            if (balanceDue < 0) balanceDue = 0;
+            
+            y += 3;
+            doc.setDrawColor(185, 28, 28);
+            doc.line(14, y-2, 196, y-2);
+            doc.setFont(undefined, "bold");
+            doc.setTextColor(185, 28, 28);
+            doc.text(`TOTAL: R ${grandTotal.toFixed(2)}`, 140, y+2);
+            y += 7;
+            
+            if (mode === "invoice") {
+                doc.text(`Amount Paid: R ${amountPaid.toFixed(2)}`, 140, y);
+                y += 5;
+                doc.text(`Balance Due: R ${balanceDue.toFixed(2)}`, 140, y);
+                y += 7;
+                if (paidEnabled || (amountPaid >= grandTotal && grandTotal > 0)) {
+                    doc.setTextColor(40, 160, 60);
+                    doc.text("✓ PAID IN FULL", 140, y);
+                } else if (amountPaid > 0 && amountPaid < grandTotal) {
+                    doc.setTextColor(185, 28, 28);
+                    doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
+                }
+            }
+            
+            // BANKING DETAILS - ONLY ON QUOTATION MODE
             if (mode === "quotation") {
-                let bankY = doc.internal.pageSize.height - 34;
+                let bankY = doc.internal.pageSize.height - 35;
                 doc.setFontSize(7);
-                doc.setTextColor(185,28,28);
+                doc.setTextColor(185, 28, 28);
                 doc.text("BANKING DETAILS", 15, bankY);
-                doc.setTextColor(50,50,70);
+                doc.setTextColor(0, 0, 0);
                 doc.text("NedBank | Account Holder: Hoz Auto Electrical And Diagnostics", 15, bankY+4);
                 doc.text("Account Number: 1341809366 | PayShap: 0836813973@nedbank", 15, bankY+8);
             }
             
+            // PAID STAMP
             if (mode === "invoice" && paidEnabled) {
-                let stampY = doc.internal.pageSize.height - 24;
+                let paidY = doc.internal.pageSize.height - 22;
                 if (paidLoaded && paidImgData) {
-                    try { doc.addImage(paidImgData, 'PNG', 15, stampY-12, 24, 11); } catch(e) { doc.text("✓ PAID", 18, stampY-4); }
-                } else { doc.setFontSize(9); doc.setTextColor(40,160,60); doc.text("✓ PAID", 18, stampY-4); }
+                    try {
+                        doc.addImage(paidImgData, 'PNG', 15, paidY-12, 22, 10);
+                    } catch(e) {
+                        doc.setFontSize(9);
+                        doc.setTextColor(40, 160, 60);
+                        doc.text("✓ PAID", 18, paidY-4);
+                    }
+                } else {
+                    doc.setFontSize(9);
+                    doc.setTextColor(40, 160, 60);
+                    doc.text("✓ PAID", 18, paidY-4);
+                }
             }
             
+            // Footer
+            let footerY = doc.internal.pageSize.height - 8;
             doc.setFontSize(6);
-            doc.setTextColor(110,110,130);
-            doc.text("HOZ Auto Electrical & Diagnostics · Thank you !", 15, doc.internal.pageSize.height - 8);
+            doc.setTextColor(120, 120, 120);
+            doc.text("HOZ Auto Electrical & Diagnostics · Thank you !", 15, footerY);
             
             const pdfBlob = doc.output("blob");
-            const fileName = docRef + ".pdf";
-            const url = URL.createObjectURL(pdfBlob);
+            const fileName = invoiceRef + ".pdf";
+            
+            // Auto Download
+            const pdfUrl = URL.createObjectURL(pdfBlob);
             const a = document.createElement("a");
-            a.href = url;
+            a.href = pdfUrl;
             a.download = fileName;
             a.click();
             
-            const shareFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-            if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-                navigator.share({ title: mode === "invoice" ? "Invoice" : "Quotation", text: `HOZ AUTO - ${client}`, files: [shareFile] }).catch(e=>console.log);
+            // Share file using native Web Share API
+            const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    title: mode === "invoice" ? "Invoice" : "Quotation",
+                    text: `Document from HOZ AUTO ELECTRICAL - ${client}`,
+                    files: [file]
+                }).catch((err) => {
+                    console.log("Share cancelled or failed:", err);
+                });
             }
-            setTimeout(() => { URL.revokeObjectURL(url); loadingDiv.style.display = "none"; }, 500);
+            
+            setTimeout(() => {
+                URL.revokeObjectURL(pdfUrl);
+                loadingDiv.style.display = "none";
+            }, 500);
         }, 100);
     }
     
-    setMode("invoice");
-    addTask(); // start with one clean task
+    // Initialize with one empty task
+    function initialize() {
+        setMode("invoice");
+        addTask();
+    }
+    
+    initialize();
 </script>
 </body>
 </html>
