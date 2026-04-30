@@ -423,18 +423,34 @@
     const toggleSwitch = document.getElementById("toggleSwitch");
     const imageStatus = document.getElementById("imageStatus");
 
-    // Load logo.png
+    // Function to crop image into perfect square and resize
+    function cropToSquareAndResize(imgElement, targetSize = 70) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Determine the smaller dimension to crop to square
+        const minDim = Math.min(imgElement.width, imgElement.height);
+        const cropX = (imgElement.width - minDim) / 2;
+        const cropY = (imgElement.height - minDim) / 2;
+        
+        // Set canvas to target square size
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        
+        // Draw the cropped square area scaled to target size
+        ctx.drawImage(imgElement, cropX, cropY, minDim, minDim, 0, 0, targetSize, targetSize);
+        
+        return canvas.toDataURL('image/png', 0.8);
+    }
+
+    // Load logo.png and make it a perfect square
     const logoImg = new Image();
     logoImg.crossOrigin = "Anonymous";
     logoImg.onload = function() {
         logoLoaded = true;
-        const canvas = document.createElement('canvas');
-        canvas.width = logoImg.width;
-        canvas.height = logoImg.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(logoImg, 0, 0);
-        logoImgData = canvas.toDataURL('image/png');
-        imageStatus.innerHTML = '✅ Logo loaded successfully | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
+        // Crop to perfect square and resize to 70x70 for clean display
+        logoImgData = cropToSquareAndResize(logoImg, 70);
+        imageStatus.innerHTML = '✅ Logo loaded (square) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#88ff88';
     };
     logoImg.onerror = function() {
@@ -450,17 +466,30 @@
     paidImg.onload = function() {
         paidLoaded = true;
         const canvas = document.createElement('canvas');
-        canvas.width = paidImg.width;
-        canvas.height = paidImg.height;
+        // Keep aspect ratio but resize for stamp
+        let width = paidImg.width;
+        let height = paidImg.height;
+        let maxW = 80;
+        let maxH = 35;
+        if (width > maxW) {
+            height = (height * maxW) / width;
+            width = maxW;
+        }
+        if (height > maxH) {
+            width = (width * maxH) / height;
+            height = maxH;
+        }
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(paidImg, 0, 0);
-        paidImgData = canvas.toDataURL('image/png');
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
+        ctx.drawImage(paidImg, 0, 0, width, height);
+        paidImgData = canvas.toDataURL('image/png', 0.7);
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded (square)' : '⚠️ logo.png missing') + ' | ✅ Paid stamp loaded';
         imageStatus.style.color = '#88ff88';
     };
     paidImg.onerror = function() {
         paidLoaded = false;
-        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded' : '⚠️ logo.png missing') + ' | ⚠️ paid.png not found in assets folder';
+        imageStatus.innerHTML = (logoLoaded ? '✅ Logo loaded (square)' : '⚠️ logo.png missing') + ' | ⚠️ paid.png not found in assets folder';
         imageStatus.style.color = '#ff8888';
     };
     paidImg.src = "assets/paid.png?" + Date.now();
@@ -555,24 +584,25 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // LOGO AT TOP LEFT CORNER (before business name)
+            // LOGO - Perfect square with increased size (25x25 mm for clean square look)
             if (logoLoaded && logoImgData) {
                 try {
-                    doc.addImage(logoImgData, 'PNG', 15, 5, 25, 12);
+                    // Square logo: 25mm width, 25mm height (perfect square, increased from original)
+                    doc.addImage(logoImgData, 'PNG', 15, 4, 25, 25);
                 } catch(e) {
                     console.log("Logo add error:", e);
                 }
             }
             
-            // Header text (shifted right to accommodate logo)
-            let headerX = logoLoaded ? 45 : 15;
+            // Header text (shifted right to accommodate larger square logo)
+            let headerX = logoLoaded ? 48 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
             doc.setTextColor(0, 0, 0);
-            doc.text("HOZ AUTO ELECTRICAL", headerX, 12);
+            doc.text("HOZ AUTO ELECTRICAL", headerX, 14);
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
-            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerX, 18);
+            doc.text("Specialists in vehicle electrical repairs & diagnostics", headerX, 20);
             
             doc.setFontSize(12);
             doc.setTextColor(185, 28, 28);
@@ -582,7 +612,7 @@
             doc.text(invoiceRef, 155, 22);
             doc.text(`Date: ${today}`, 155, 28);
             
-            y = 38;
+            y = 42;
             doc.setFontSize(8);
             doc.setTextColor(185, 28, 28);
             doc.text("BILL TO:", 15, y);
@@ -591,7 +621,7 @@
             doc.text(`Vehicle: ${carMakeModel}`, 15, y+10);
             doc.text(`Reg: ${vehicleReg} | Contact: ${contact}`, 15, y+15);
             
-            y = 62;
+            y = 66;
             // Table headers
             doc.setFillColor(240, 240, 240);
             doc.rect(14, y-3, 182, 7, 'F');
@@ -689,7 +719,7 @@
                 let paidY = doc.internal.pageSize.height - 22;
                 if (paidLoaded && paidImgData) {
                     try {
-                        doc.addImage(paidImgData, 'PNG', 15, paidY-12, 22, 12);
+                        doc.addImage(paidImgData, 'PNG', 15, paidY-12, 22, 10);
                     } catch(e) {
                         doc.setFontSize(9);
                         doc.setTextColor(40, 160, 60);
