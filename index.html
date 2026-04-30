@@ -161,7 +161,6 @@
         input::placeholder, textarea::placeholder {
             color: #5a5a5a;
         }
-        /* Style for price hint */
         .task-price-input {
             color: white;
         }
@@ -436,22 +435,19 @@
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Determine the smaller dimension to crop to square
         const minDim = Math.min(imgElement.width, imgElement.height);
         const cropX = (imgElement.width - minDim) / 2;
         const cropY = (imgElement.height - minDim) / 2;
         
-        // Set canvas to target square size
         canvas.width = targetSize;
         canvas.height = targetSize;
         
-        // Draw the cropped square area scaled to target size
         ctx.drawImage(imgElement, cropX, cropY, minDim, minDim, 0, 0, targetSize, targetSize);
         
         return canvas.toDataURL('image/png', 0.8);
     }
 
-    // Load logo.png from assets
+    // Load logo.png
     const logoImg = new Image();
     logoImg.onload = function() {
         logoLoaded = true;
@@ -463,7 +459,7 @@
         logoLoaded = false;
         imageStatus.innerHTML = '⚠️ logo.png not found (using text logo) | ' + (paidLoaded ? '✅ Paid stamp loaded' : '⏳ Loading paid stamp...');
         imageStatus.style.color = '#ff8888';
-        // Create a text-based fallback logo
+        // Fallback text logo
         const canvas = document.createElement('canvas');
         canvas.width = 70;
         canvas.height = 70;
@@ -543,7 +539,7 @@
         taskDiv.setAttribute("data-id", taskCounter);
         taskDiv.innerHTML = `
             <div class="task-desc"><input type="text" class="task-desc-input" placeholder="e.g., Alternator repair, Battery replacement" value=""></div>
-            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R) - leave empty for free" step="0.01" value=""></div>
+            <div class="task-price"><input type="number" class="task-price-input" placeholder="Amount (R) - leave empty for no charge" step="0.01" value=""></div>
             <button class="remove-task" onclick="removeTask(this)">✖</button>
         `;
         container.appendChild(taskDiv);
@@ -564,13 +560,17 @@
         document.querySelectorAll(".task-item").forEach(item => {
             const desc = item.querySelector(".task-desc-input")?.value || "";
             const priceInput = item.querySelector(".task-price-input")?.value;
-            // Only add task if description is not empty OR price is greater than 0
-            let price = 0;
+            let price = null;
             if (priceInput !== null && priceInput !== undefined && priceInput !== "") {
-                price = parseFloat(priceInput) || 0;
+                price = parseFloat(priceInput);
+                if (isNaN(price)) price = null;
             }
-            if (desc.trim() !== "" || price > 0) {
-                tasks.push({ description: desc || "Unnamed task", amount: price });
+            // Only add if description is not empty OR price is valid and > 0
+            if (desc.trim() !== "" || (price !== null && price > 0)) {
+                tasks.push({ 
+                    description: desc.trim() || "Unnamed task", 
+                    amount: (price !== null && price > 0) ? price : 0
+                });
             }
         });
         return tasks;
@@ -606,16 +606,13 @@
             const invoiceRef = mode === "invoice" ? `HOZ-INV-${docNumber}` : `HOZ-QUO-${docNumber}`;
             const today = new Date().toLocaleDateString("en-ZA");
             
-            // LOGO - Perfect square
+            // LOGO
             if (logoImgData) {
                 try {
                     doc.addImage(logoImgData, 'PNG', 15, 4, 25, 25);
-                } catch(e) {
-                    console.log("Logo add error:", e);
-                }
+                } catch(e) { console.log("Logo add error:", e); }
             }
             
-            // Header text
             let headerX = (logoImgData) ? 48 : 15;
             doc.setFontSize(18);
             doc.setFont(undefined, "bold");
@@ -658,16 +655,17 @@
             doc.setTextColor(0, 0, 0);
             
             tasks.forEach(task => {
-                let descText = task.description.length > 45 ? task.description.substring(0, 42) + "..." : task.description;
+                let descText = task.description.length > 48 ? task.description.substring(0, 45) + "..." : task.description;
                 doc.text(descText, 16, y);
                 if (task.amount > 0) {
                     doc.text(`R ${task.amount.toFixed(2)}`, 160, y);
                     subtotal += task.amount;
                 } else {
-                    doc.text("Free / Included", 160, y);
+                    // Show dash for no charge / zero amount
+                    doc.text("—", 160, y);
                 }
                 y += 5.5;
-                if (y > 230) { doc.addPage(); y = 20; }
+                if (y > 250) { doc.addPage(); y = 20; }
             });
             
             if (tasks.length === 0) {
@@ -681,13 +679,13 @@
             const tip = parseFloat(document.getElementById("tipAmount")?.value) || 0;
             
             if (extra > 0) {
-                doc.text("Parts", 16, y);
+                doc.text("Parts / Materials", 16, y);
                 doc.text(`R ${extra.toFixed(2)}`, 160, y);
                 subtotal += extra;
                 y += 5;
             }
             if (discount > 0) {
-                doc.text("Discount applied", 16, y);
+                doc.text("Discount", 16, y);
                 doc.text(`- R ${discount.toFixed(2)}`, 160, y);
                 subtotal -= discount;
                 y += 5;
@@ -704,7 +702,7 @@
             let balanceDue = grandTotal - amountPaid;
             if (balanceDue < 0) balanceDue = 0;
             
-            y += 2;
+            y += 3;
             doc.setDrawColor(185, 28, 28);
             doc.line(14, y-2, 196, y-2);
             doc.setFont(undefined, "bold");
@@ -722,7 +720,7 @@
                     doc.text("✓ PAID IN FULL", 140, y);
                 } else if (amountPaid > 0 && amountPaid < grandTotal) {
                     doc.setTextColor(185, 28, 28);
-                    doc.text("⏳ PARTIAL PAYMENT RECEIVED", 140, y);
+                    doc.text("⏳ PARTIAL PAYMENT", 140, y);
                 }
             }
             
@@ -791,10 +789,9 @@
         }, 100);
     }
     
-    // Initialize with one empty task that has placeholder hint
+    // Initialize with one empty task
     function initialize() {
         setMode("invoice");
-        // Add one empty task with placeholder hints
         addTask();
     }
     
